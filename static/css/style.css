@@ -1,0 +1,347 @@
+/* ==========================================================================
+   Portal ITSE — Sistema de diseño
+   FES Cuautitlán · UNAM · Ingeniería en Telecomunicaciones, Sistemas y Electrónica
+   ========================================================================== */
+
+:root{
+  --azul:        #0B2A4A;
+  --azul-2:      #123A63;
+  --azul-oscuro: #071B30;
+  --dorado:      #C7A046;
+  --dorado-txt:  #8A6A22;
+  --fondo:       #F3F5F8;
+  --superficie:  #FFFFFF;
+  --senal:       #2E9E82;
+  --senal-txt:   #1F7561;
+  --alerta:      #C24444;
+  --alerta-bg:   #FBEAEA;
+  --tinta:       #16202C;
+  --texto-sec:   #5B6B7D;
+  --texto-mute:  #8B98A6;
+  --linea:       #DCE2EA;
+  --linea-fuerte:#C3CDD9;
+
+  --fuente-display: 'Space Grotesk', sans-serif;
+  --fuente-cuerpo:  'Inter', sans-serif;
+  --fuente-mono:    'JetBrains Mono', monospace;
+
+  --radio: 8px;
+  --radio-lg: 12px;
+  --sombra: 0 1px 2px rgba(11,42,74,0.06), 0 1px 1px rgba(11,42,74,0.04);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family:var(--fuente-cuerpo);
+  background:var(--fondo);
+  color:var(--tinta);
+}
+a{ color:inherit; }
+h1,h2,h3,h4{ font-family:var(--fuente-display); font-weight:600; color:var(--tinta); }
+img{ max-width:100%; }
+
+/* -------------------------------------------------------------------------
+   Trazo de señal (firma de marca) — franja superior animada
+   ------------------------------------------------------------------------- */
+.signal-strip{ width:100%; height:8px; background:var(--azul); overflow:hidden; }
+.signal-strip svg{ display:block; width:100%; height:100%; }
+.signal-strip path{
+  fill:none; stroke:var(--dorado); stroke-width:2; stroke-linecap:round;
+  stroke-dasharray:2000; stroke-dashoffset:2000;
+  animation:sig-draw 2.2s ease-out forwards;
+}
+@keyframes sig-draw{ to{ stroke-dashoffset:0; } }
+
+/* -------------------------------------------------------------------------
+   Barra superior / navegación (paneles de alumno, profesor, admin)
+   ------------------------------------------------------------------------- */
+.top-navbar{
+  background:var(--azul);
+  padding:14px 30px;
+  display:flex; justify-content:space-between; align-items:center;
+  color:#fff;
+  border-bottom:1px solid var(--azul-2);
+}
+.top-navbar h2{
+  margin:0; font-size:15px; font-weight:600; color:#fff;
+  letter-spacing:0.01em;
+}
+.top-navbar .marca{ display:flex; align-items:center; gap:10px; }
+.top-navbar .marca .punto{ width:7px; height:7px; border-radius:50%; background:var(--dorado); flex-shrink:0; }
+
+.logout-btn, .btn-logout{
+  color:#fff; text-decoration:none; padding:7px 14px;
+  border:1px solid rgba(255,255,255,0.3); border-radius:6px;
+  font-size:13px; font-weight:500; transition:.15s;
+  background:transparent; cursor:pointer; font-family:var(--fuente-cuerpo);
+}
+.logout-btn:hover, .btn-logout:hover{ background:rgba(226,90,90,0.15); border-color:#E25A5A; color:#fff; }
+
+.navbar-right{ display:flex; align-items:center; gap:14px; }
+.navbar-right span{ color:rgba(255,255,255,0.65); font-size:13px; }
+
+/* Pestañas de navegación secundaria */
+.tabs-container{ background:var(--azul); padding:0 30px; display:flex; gap:2px; }
+.tab-link{
+  padding:11px 18px; color:rgba(255,255,255,0.65); text-decoration:none;
+  font-weight:500; font-size:13px; border-radius:6px 6px 0 0;
+  transition:.15s; border-top:2px solid transparent;
+}
+.tab-link:hover{ color:#fff; background:rgba(255,255,255,0.06); }
+.tab-link.active{ background:var(--fondo); color:var(--azul); border-top-color:var(--dorado); font-weight:600; }
+
+/* -------------------------------------------------------------------------
+   Contenedores
+   ------------------------------------------------------------------------- */
+.container{ max-width:1000px; margin:36px auto; padding:0 22px; }
+.container.ancho{ max-width:1120px; }
+
+/* -------------------------------------------------------------------------
+   Tarjetas de autenticación (login / recuperación)
+   ------------------------------------------------------------------------- */
+.auth-shell{
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  position:relative; padding:24px;
+}
+.auth-shell::before{
+  content:''; position:fixed; inset:0; z-index:0;
+  background:linear-gradient(180deg, rgba(11,42,74,0.94), rgba(11,42,74,0.88)), var(--auth-bg, none) center/cover no-repeat;
+}
+.auth-box{
+  position:relative; z-index:1; background:var(--superficie);
+  border-radius:var(--radio-lg); width:100%; max-width:380px;
+  padding:34px 32px 28px; text-align:center;
+  border-top:3px solid var(--dorado);
+  box-shadow:0 20px 50px rgba(0,0,0,0.35);
+}
+.auth-box.acento-verde{ border-top-color:var(--senal); }
+.auth-box img.logo{ width:64px; height:64px; object-fit:contain; margin:0 auto 16px; display:block; }
+.auth-box h1, .auth-box h2{ font-size:19px; margin-bottom:4px; }
+.auth-box .subt{ font-size:13px; color:var(--texto-sec); margin-bottom:22px; line-height:1.5; font-family:var(--fuente-mono); letter-spacing:0.01em; }
+.auth-badge{
+  display:inline-block; background:var(--azul); color:var(--dorado);
+  font-size:11px; font-weight:600; padding:4px 12px; border-radius:20px;
+  margin-bottom:14px; letter-spacing:0.04em; text-transform:uppercase;
+}
+.auth-badge.verde{ background:var(--senal); color:#fff; }
+
+.campo{ text-align:left; margin-bottom:15px; }
+.campo label{ display:block; font-size:12px; font-weight:600; color:var(--texto-sec); margin-bottom:5px; }
+.campo label .req{ color:var(--alerta); }
+.input-wrap{ display:flex; border:1px solid var(--linea); border-radius:6px; overflow:hidden; position:relative; transition:.15s; }
+.input-wrap:focus-within{ border-color:var(--azul); box-shadow:0 0 0 3px rgba(11,42,74,0.08); }
+.input-wrap input{ flex:1; padding:10px 12px; border:none; outline:none; font-size:14px; font-family:inherit; min-width:0; }
+.input-wrap .icon{
+  padding:0 12px; background:var(--fondo); border-left:1px solid var(--linea);
+  display:flex; align-items:center; color:var(--texto-sec); cursor:pointer; flex-shrink:0;
+}
+.input-wrap .icon svg{ width:16px; height:16px; }
+
+form input:not([type]), form input[type="text"], form input[type="password"],
+form input[type="date"], form input[type="file"], form select, form textarea{
+  font-family:var(--fuente-cuerpo);
+}
+
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  width:100%; padding:11px; background:var(--azul); color:#fff;
+  border:none; border-radius:6px; font-size:14px; font-weight:600;
+  cursor:pointer; transition:.15s; text-decoration:none; font-family:var(--fuente-cuerpo);
+}
+.btn:hover{ background:var(--azul-2); }
+.btn.dorado{ background:var(--dorado); color:var(--azul); }
+.btn.dorado:hover{ background:#b3903c; }
+.btn.verde{ background:var(--senal); }
+.btn.verde:hover{ background:var(--senal-txt); }
+
+.mensaje-error{
+  background:var(--alerta-bg); color:#8C2E2E; padding:10px 14px;
+  border-radius:6px; font-size:13px; margin-bottom:16px; text-align:left;
+  border-left:3px solid var(--alerta);
+}
+.mensaje-ok{
+  background:#E7F3EE; color:var(--senal-txt); padding:10px 14px;
+  border-radius:6px; font-size:13px; margin-bottom:16px; text-align:left;
+  border-left:3px solid var(--senal);
+}
+
+.captcha-box{ background:var(--fondo); border:1px solid var(--linea); border-radius:6px; padding:14px; margin-bottom:16px; text-align:center; }
+.captcha-box p{ font-size:12px; color:var(--texto-sec); margin-bottom:10px; }
+.captcha-img-wrap{ display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:10px; }
+.captcha-img-wrap img{ border-radius:4px; border:1px solid var(--linea); display:block; }
+.captcha-refresh{
+  background:var(--superficie); border:1px solid var(--linea); border-radius:6px;
+  width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--texto-sec); transition:.15s; flex-shrink:0;
+}
+.captcha-refresh:hover{ background:var(--fondo); color:var(--azul); }
+.captcha-refresh svg{ width:15px; height:15px; }
+.captcha-input{
+  width:100%; padding:9px 12px; border:1px solid var(--linea); border-radius:6px;
+  font-size:15px; text-align:center; letter-spacing:5px; font-family:var(--fuente-mono);
+}
+
+.auth-links{ margin-top:18px; display:flex; flex-direction:column; gap:8px; }
+.auth-links a{ font-size:13px; color:var(--azul); text-decoration:none; font-weight:500; }
+.auth-links a:hover{ text-decoration:underline; }
+.auth-links a.volver{ color:var(--texto-mute); font-weight:400; }
+
+/* -------------------------------------------------------------------------
+   Botones de icono genéricos + tooltips
+   ------------------------------------------------------------------------- */
+[data-tip]{ position:relative; }
+[data-tip]:hover::after{
+  content:attr(data-tip); position:absolute; right:0; top:calc(100% + 6px);
+  background:var(--tinta); color:#fff; font-size:11px; padding:6px 10px;
+  border-radius:5px; white-space:normal; max-width:220px; text-align:center;
+  line-height:1.4; z-index:100; pointer-events:none;
+}
+
+/* -------------------------------------------------------------------------
+   Tarjetas de contenido general
+   ------------------------------------------------------------------------- */
+.card{ background:var(--superficie); border-radius:var(--radio-lg); box-shadow:var(--sombra); border:1px solid var(--linea); }
+.empty, .empty-box, .caja-vacia{
+  background:var(--superficie); border-radius:var(--radio-lg); padding:44px 30px;
+  text-align:center; color:var(--texto-mute); border:1px dashed var(--linea-fuerte);
+}
+.empty svg, .empty-box svg, .caja-vacia svg{ width:32px; height:32px; color:var(--linea-fuerte); margin-bottom:10px; }
+.empty p, .empty-box p, .caja-vacia p{ font-size:13px; line-height:1.6; max-width:420px; margin:0 auto; }
+
+/* -------------------------------------------------------------------------
+   Tablas
+   ------------------------------------------------------------------------- */
+table{ width:100%; border-collapse:collapse; }
+th{
+  background:var(--fondo); color:var(--texto-sec); font-size:11px; font-weight:600;
+  text-transform:uppercase; letter-spacing:0.04em; padding:10px 16px; text-align:left;
+  border-bottom:1px solid var(--linea);
+}
+td{ padding:12px 16px; border-bottom:1px solid var(--linea); vertical-align:top; font-size:13px; color:var(--tinta); }
+tr:last-child td{ border-bottom:none; }
+
+/* -------------------------------------------------------------------------
+   Insignias de estilo de aprendizaje — con glifo de señal
+   (visual = seno · auditivo = triángulo · kinestesico = pulso · analitico = escalón)
+   ------------------------------------------------------------------------- */
+.badge-estilo{
+  display:inline-flex; align-items:center; gap:5px; padding:3px 10px 3px 6px;
+  border-radius:20px; font-size:11px; font-weight:600; text-transform:capitalize;
+}
+.badge-estilo svg{ width:20px; height:10px; flex-shrink:0; }
+.badge-visual{ background:#E6EDF5; color:#1B4067; }
+.badge-auditivo{ background:#F7EFDD; color:#8A6A22; }
+.badge-kinestesico{ background:#E4F2EE; color:#1F7561; }
+.badge-analitico{ background:#F0EAF7; color:#5B3E85; }
+
+/* -------------------------------------------------------------------------
+   Etiquetas de estado (IA / corregida / calificada / pendiente)
+   ------------------------------------------------------------------------- */
+.tag{ display:inline-block; font-size:10px; font-weight:600; padding:3px 9px; border-radius:20px; letter-spacing:0.02em; }
+.tag-ia{ background:#E6EDF5; color:#1B4067; }
+.tag-fix, .tag-corregida, .tag-calificada, .tag-calificada-p{ background:#E4F2EE; color:#1F7561; }
+.tag-pendiente-cal, .tag-sin-calificar{ background:#F7EFDD; color:#8A6A22; }
+
+/* -------------------------------------------------------------------------
+   Formularios en tarjeta (asignar tarea, agregar usuario)
+   ------------------------------------------------------------------------- */
+.form-card{ background:var(--superficie); border-radius:var(--radio-lg); box-shadow:var(--sombra); border:1px solid var(--linea); overflow:hidden; }
+.form-header{ background:var(--azul); color:#fff; padding:12px 18px; font-weight:600; font-size:13px; border-bottom:2px solid var(--dorado); }
+.form-header.verde{ background:var(--senal); border-bottom-color:#1F7561; }
+.form-body{ padding:16px 18px; }
+.form-body label{ display:block; font-size:12px; font-weight:600; color:var(--texto-sec); margin-bottom:5px; }
+.form-body input, .form-body select, .form-body textarea{
+  width:100%; padding:9px 11px; border:1px solid var(--linea); border-radius:6px;
+  font-size:13px; margin-bottom:13px; font-family:var(--fuente-cuerpo); box-sizing:border-box;
+}
+.form-body input:focus, .form-body select:focus, .form-body textarea:focus{
+  outline:none; border-color:var(--azul); box-shadow:0 0 0 3px rgba(11,42,74,0.07);
+}
+.form-body textarea{ resize:vertical; min-height:76px; }
+.form-body input[type="file"]{ padding:6px; background:var(--fondo); }
+
+/* -------------------------------------------------------------------------
+   Botones de acción (variantes semánticas)
+   ------------------------------------------------------------------------- */
+.btn-accion{
+  display:inline-flex; align-items:center; gap:6px; padding:9px 16px;
+  border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;
+  border:none; transition:.15s; text-decoration:none; font-family:var(--fuente-cuerpo);
+}
+.btn-accion.primario{ background:var(--azul); color:#fff; }
+.btn-accion.primario:hover{ background:var(--azul-2); }
+.btn-accion.exito{ background:var(--senal); color:#fff; }
+.btn-accion.exito:hover{ background:var(--senal-txt); }
+.btn-accion.fantasma{ background:var(--superficie); color:var(--texto-sec); border:1px solid var(--linea); }
+.btn-accion.fantasma:hover{ background:var(--fondo); }
+.btn-accion.peligro{ background:transparent; color:var(--alerta); padding:4px 8px; }
+.btn-accion.peligro:hover{ background:var(--alerta-bg); }
+.btn-accion.peligro:disabled{ color:var(--texto-mute); cursor:not-allowed; }
+
+/* -------------------------------------------------------------------------
+   Modal genérico (corrección de recomendaciones / actividades)
+   ------------------------------------------------------------------------- */
+.modal-overlay{ display:none; position:fixed; inset:0; background:rgba(11,20,32,0.55); z-index:1000; justify-content:center; align-items:center; padding:20px; }
+.modal-overlay.active{ display:flex; }
+.modal{ background:var(--superficie); border-radius:var(--radio-lg); width:100%; max-width:560px; box-shadow:0 24px 60px rgba(0,0,0,0.3); overflow:hidden; }
+.modal-head{ background:var(--azul); padding:16px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--dorado); }
+.modal-head h3{ color:#fff; font-size:14px; font-weight:600; margin:0; }
+.modal-x{ background:none; border:none; color:rgba(255,255,255,0.7); font-size:20px; cursor:pointer; line-height:1; }
+.modal-x:hover{ color:#fff; }
+.modal-body{ padding:20px; }
+.modal-info{ background:var(--fondo); border-radius:6px; padding:9px 13px; font-size:12px; color:var(--texto-sec); margin-bottom:14px; }
+.modal-info strong{ color:var(--azul); }
+.modal-label{ display:block; font-size:12px; font-weight:600; color:var(--texto-sec); margin-bottom:6px; }
+.rec-original{
+  background:var(--fondo); border:1px solid var(--linea); border-radius:6px; padding:11px;
+  font-size:12px; color:var(--texto-sec); white-space:pre-line; line-height:1.6;
+  margin-bottom:14px; max-height:130px; overflow-y:auto;
+}
+.modal-body textarea{
+  width:100%; padding:11px; border:1px solid var(--linea); border-radius:6px;
+  font-size:13px; font-family:var(--fuente-cuerpo); resize:vertical; min-height:120px;
+  line-height:1.6; box-sizing:border-box;
+}
+.modal-body textarea:focus{ outline:none; border-color:var(--azul); box-shadow:0 0 0 3px rgba(11,42,74,0.08); }
+.modal-foot{ padding:14px 20px; background:var(--fondo); display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--linea); }
+
+/* -------------------------------------------------------------------------
+   Chatbot flotante ("Ampli")
+   ------------------------------------------------------------------------- */
+#chat-container{ position:fixed; bottom:20px; left:20px; z-index:1000; font-family:var(--fuente-cuerpo); }
+#chat-icon{
+  width:54px; height:54px; background:var(--azul); border-radius:50%;
+  box-shadow:0 6px 20px rgba(11,42,74,0.35); cursor:pointer;
+  display:flex; justify-content:center; align-items:center; color:#fff;
+  transition:transform .2s; border:2px solid var(--dorado); overflow:hidden;
+}
+#chat-icon:hover{ transform:scale(1.06); }
+#chat-icon img{ width:100%; height:100%; object-fit:cover; }
+#chat-window{
+  display:none; width:320px; height:440px; background:var(--superficie);
+  border-radius:var(--radio-lg); box-shadow:0 12px 40px rgba(0,0,0,0.2);
+  position:absolute; bottom:66px; left:0; overflow:hidden; flex-direction:column;
+  border:1px solid var(--linea);
+}
+.chat-header{
+  background:var(--azul); color:#fff; padding:13px 15px; font-weight:600; font-size:13px;
+  display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--dorado);
+}
+.mascot-img-placeholder{ width:26px; height:26px; background:var(--azul-2); border-radius:50%; margin-right:8px; display:inline-block; border:2px solid #fff; }
+.close-chat{ background:none; border:none; color:#fff; font-size:18px; cursor:pointer; opacity:.75; }
+.close-chat:hover{ opacity:1; }
+#chat-body{ flex:1; padding:14px; overflow-y:auto; background:var(--fondo); display:flex; flex-direction:column; gap:9px; }
+.message{ padding:9px 13px; border-radius:8px; max-width:80%; font-size:13px; line-height:1.45; }
+.bot-message{ background:#fff; color:var(--tinta); align-self:flex-start; border-radius:2px 8px 8px 8px; border:1px solid var(--linea); }
+.user-message{ background:var(--azul); color:#fff; align-self:flex-end; border-radius:8px 8px 2px 8px; }
+.chat-footer{ padding:10px; background:var(--superficie); border-top:1px solid var(--linea); display:flex; gap:6px; }
+#chat-input{ flex:1; padding:9px 12px; border:1px solid var(--linea); border-radius:20px; outline:none; font-size:13px; font-family:inherit; }
+#chat-input:focus{ border-color:var(--azul); }
+#send-btn{ background:var(--dorado); color:var(--azul); border:none; padding:0 16px; border-radius:20px; font-weight:600; font-size:13px; cursor:pointer; }
+#send-btn:hover{ background:#b3903c; }
+
+/* -------------------------------------------------------------------------
+   Utilidades de texto en cuerpo mono (cuentas, fechas, cifras)
+   ------------------------------------------------------------------------- */
+.mono{ font-family:var(--fuente-mono); }

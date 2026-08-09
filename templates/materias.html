@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Plan de Estudios - ITSE</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f5f6fa; margin: 0; padding: 0; }
+        
+        .top-navbar { background-color: #002B5C; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; color: white; border-bottom: 2px solid #D4A12A;}
+        .top-navbar h2 { margin: 0; font-size: 18px; color: #D4A12A; letter-spacing: 1px; }
+        .logout-btn { background: transparent; color: white; text-decoration: none; padding: 8px 15px; border: 1px solid white; border-radius: 4px; transition: 0.3s; font-size: 14px;}
+        .logout-btn:hover { background: #e74c3c; color: white; border-color: #e74c3c;}
+        
+        .tabs-container { background-color: #002B5C; padding: 0 30px; display: flex; gap: 5px; }
+        .tab-link { padding: 12px 20px; color: white; text-decoration: none; font-weight: bold; font-size: 14px; border-radius: 8px 8px 0 0; opacity: 0.7; transition: 0.3s;}
+        .tab-link:hover { opacity: 1; background-color: rgba(255,255,255,0.1); }
+        .tab-link.active { background-color: #f5f6fa; color: #002B5C; opacity: 1; border-top: 3px solid #D4A12A;}
+
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+        
+        /* Barra de créditos flotante */
+        .barra-creditos { position: sticky; top: 10px; background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid #002B5C; z-index: 100; margin-bottom: 30px;}
+        .contador-texto { font-size: 18px; font-weight: bold; color: #333; }
+        .contador-numero { font-size: 24px; color: #27ae60; }
+        .contador-numero.excedido { color: #e74c3c; }
+        .btn-guardar { background: #002B5C; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.3s;}
+        .btn-guardar:hover { background: #D4A12A; color: #002B5C;}
+
+        .semestre-bloque { margin-bottom: 40px; }
+        .semestre-header { background: #002B5C; color: white; padding: 12px 20px; font-size: 18px; margin: 0 0 20px 0; border-radius: 8px; border-left: 5px solid #D4A12A;}
+        
+        .materias-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        
+        /* Magia CSS para que el Checkbox se vea como Tarjeta */
+        .materia-label { display: block; cursor: pointer; }
+        .materia-checkbox { display: none; }
+        
+        .materia-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 4px solid #eee; transition: 0.2s; min-height: 90px;}
+        
+        /* Cuando la materia está seleccionada */
+        .materia-checkbox:checked + .materia-card { border-top: 4px solid #27ae60; background-color: #f4fdf7; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.2); }
+        
+        /* Cuando se alcanzan los 64 créditos (deshabilitado) */
+        .materia-checkbox:disabled + .materia-card { opacity: 0.5; cursor: not-allowed; }
+
+        .materia-card h4 { margin: 0 0 10px 0; color: #333; font-size: 15px; font-weight: 600; line-height: 1.4;}
+        .creditos-badge { background: #f0f2f5; color: #666; font-size: 12px; font-weight: bold; padding: 4px 10px; border-radius: 12px; border: 1px solid #ddd;}
+        .materia-checkbox:checked + .materia-card .creditos-badge { background: #27ae60; color: white; border-color: #27ae60;}
+
+        /* Filtro de semestre */
+        .filtro-semestre { background: white; padding: 14px 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 16px; display: flex; align-items: center; gap: 14px; border-left: 5px solid #D4A12A; }
+        .filtro-semestre label { font-size: 14px; font-weight: bold; color: #333; white-space: nowrap; }
+        .filtro-semestre select { padding: 8px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; color: #333; cursor: pointer; flex: 1; max-width: 300px; background: #f9f9f9; }
+        .filtro-semestre select:focus { outline: none; border-color: #002B5C; }
+        .semestre-bloque { transition: opacity 0.3s; }
+        .semestre-bloque.atenuado { opacity: 0.25; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="top-navbar">
+        <h2>FESC - Campo 4</h2>
+        <a href="/logout" class="logout-btn">Cerrar Sesión</a>
+    </div>
+    <div class="tabs-container">
+        <a href="/inicio" class="tab-link"> Inicio (Recomendaciones IA)</a>
+        <a href="/mis_materias" class="tab-link"> Mis Materias (Test)</a>
+        <a href="/materias" class="tab-link active"> Plan de Estudios</a>
+        <a href="/mis_actividades" class="tab-link"> Actividades y Tareas</a>
+    </div>
+
+    <div class="container">
+        <form action="/guardar_materias" method="POST">
+            
+            <!-- Filtro de semestre -->
+            <div class="filtro-semestre">
+                <label> Ir al semestre:</label>
+                <select id="filtro-select" onchange="filtrarSemestre(this.value)">
+                    <option value="todos">Mostrar todos los semestres</option>
+                    {% for semestre in plan.keys() %}
+                    <option value="{{ semestre }}">{{ semestre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="barra-creditos">
+                <div class="contador-texto">
+                    Créditos seleccionados: <span id="contador-creditos" class="contador-numero">0</span> / 64
+                </div>
+                <button type="submit" class="btn-guardar">Inscribir Materias Seleccionadas</button>
+            </div>
+
+            {% for semestre, lista_materias in plan.items() %}
+            <div class="semestre-bloque" id="sem-{{ semestre | replace(' ', '-') }}"
+                 data-semestre="{{ semestre }}">
+                <h4 class="semestre-header">{{ semestre }}</h4>
+                <div class="materias-grid">
+                    {% for mat in lista_materias %}
+                        <label class="materia-label">
+                            <input type="checkbox" name="materias_inscritas" value="{{ mat.nombre }}" class="materia-checkbox" data-creditos="{{ mat.creditos }}" {% if mat.nombre in alumno.materias %} checked {% endif %}>
+                            <div class="materia-card">
+                                <h4>{{ mat.nombre }}</h4>
+                                <span class="creditos-badge">{{ mat.creditos }} Créditos</span>
+                            </div>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </form>
+    </div>
+
+    <script>
+        const checkboxes = document.querySelectorAll('.materia-checkbox');
+        const contador = document.getElementById('contador-creditos');
+        const MAX_CREDITOS = 64;
+
+        function calcularCreditos() {
+            let total = 0;
+            checkboxes.forEach(cb => {
+                if(cb.checked) total += parseInt(cb.dataset.creditos);
+            });
+            
+            contador.textContent = total;
+            
+            // Bloquear visualmente si el limite se alcanza
+            checkboxes.forEach(cb => {
+                if(!cb.checked) {
+                    if(total + parseInt(cb.dataset.creditos) > MAX_CREDITOS) {
+                        cb.disabled = true;
+                    } else {
+                        cb.disabled = false;
+                    }
+                }
+            });
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', calcularCreditos);
+        });
+
+        // Calcular al cargar la página
+        calcularCreditos();
+
+        function filtrarSemestre(valor) {
+            const bloques = document.querySelectorAll('.semestre-bloque');
+            if (valor === 'todos') {
+                bloques.forEach(b => b.classList.remove('atenuado'));
+                return;
+            }
+            bloques.forEach(b => {
+                if (b.dataset.semestre === valor) {
+                    b.classList.remove('atenuado');
+                    b.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    b.classList.add('atenuado');
+                }
+            });
+        }
+    </script>
+    <style>
+    /* --- Estilos CSS para el Chatbot --- */
+    #chat-container {
+        position: fixed;
+        bottom: 20px;
+        left: 20px; /* Posición inferior izquierda */
+        z-index: 1000; /* Siempre por encima de todo */
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* El ícono flotante circular */
+    #chat-icon {
+        width: 60px;
+        height: 60px;
+        background-color: #002B5C; /* Azul FESC */
+        border-radius: 50%;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        font-size: 30px;
+        transition: transform 0.3s ease;
+        border: 3px solid #D4A12A; /* Borde Oro FESC */
+    }
+
+    #chat-icon:hover {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    /* La ventana del chat (oculta por defecto) */
+    #chat-window {
+        display: none; /* Oculto inicialmente */
+        width: 320px;
+        height: 450px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+        position: absolute;
+        bottom: 80px; /* Arriba del ícono */
+        left: 0;
+        overflow: hidden;
+        flex-direction: column;
+        border: 2px solid #eee;
+    }
+
+    /* Encabezado del chat */
+    .chat-header {
+        background-color: #002B5C;
+        color: white;
+        padding: 15px;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 3px solid #D4A12A;
+    }
+
+    /* Placeholder para la imagen de la mascota */
+    .mascot-img-placeholder {
+        width: 30px;
+        height: 30px;
+        background-color: #ccc; /* Gris temporal */
+        border-radius: 50%;
+        margin-right: 10px;
+        display: inline-block;
+        border: 2px solid white;
+    }
+
+    .close-chat {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        opacity: 0.7;
+    }
+    .close-chat:hover { opacity: 1; }
+
+    /* Cuerpo del chat donde salen los mensajes */
+    #chat-body {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto; /* Scroll si hay muchos mensajes */
+        background-color: #f9f9f9;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* Estilos de las burbujas de mensaje */
+    .message {
+        padding: 10px 14px;
+        border-radius: 8px;
+        max-width: 80%;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+
+    .bot-message {
+        background-color: #e2e8f0;
+        color: #333;
+        align-self: flex-start;
+        border-radius: 0 8px 8px 8px;
+    }
+
+    .user-message {
+        background-color: #002B5C;
+        color: white;
+        align-self: flex-end;
+        border-radius: 8px 8px 0 8px;
+    }
+
+    /* Pie del chat con el input */
+    .chat-footer {
+        padding: 10px;
+        background: white;
+        border-top: 1px solid #eee;
+        display: flex;
+        gap: 5px;
+    }
+
+    #chat-input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        outline: none;
+    }
+
+    #send-btn {
+        background-color: #D4A12A;
+        color: #002B5C;
+        border: none;
+        padding: 0 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+</style>
+
+<div id="chat-container">
+    <div id="chat-window">
+        <div class="chat-header">
+            <div style="display: flex; align-items: center;">
+                <div class="mascot-img-placeholder"></div> <span>Apoyo ITSE</span>
+            </div>
+            <button class="close-chat" onclick="toggleChat()">&times;</button>
+        </div>
+        <div id="chat-body">
+            <div class="message bot-message">
+                ¡Hola! Soy tu compañero de apoyo ITSE.  ¿Tienes alguna duda sobre tus estilos de aprendizaje o necesitas motivación? 
+            </div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="chat-input" placeholder="Escribe tu duda corta...">
+            <button id="send-btn" onclick="enviarMensaje()">Enviar</button>
+        </div>
+    </div>
+
+    <div id="chat-icon" onclick="toggleChat()">
+        
+    </div>
+</div>
+
+<script>
+    /* --- Javascript para la funcionalidad en tiempo real --- */
+    
+    // 1. Función para abrir/cerrar la ventana
+    function toggleChat() {
+        const window = document.getElementById('chat-window');
+        if (window.style.display === 'flex') {
+            window.style.display = 'none';
+        } else {
+            window.style.display = 'flex';
+            // Auto-focus al input al abrir
+            document.getElementById('chat-input').focus();
+        }
+    }
+
+    // 2. Función para enviar el mensaje al backend (app.py)
+    async function enviarMensaje() {
+        const input = document.getElementById('chat-input');
+        const body = document.getElementById('chat-body');
+        const mensaje = input.value.trim();
+
+        if (mensaje === "") return; // No enviar vacío
+
+        // A) Mostrar mensaje del usuario inmediatamente en pantalla
+        input.value = ''; // Limpiar input
+        const userDiv = document.createElement('div');
+        userDiv.className = 'message user-message';
+        userDiv.textContent = mensaje;
+        body.appendChild(userDiv);
+        scrollToBottom();
+
+        // B) Mostrar indicador de "escribiendo..." temporal
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message bot-message';
+        typingDiv.id = 'typing-placeholder';
+        typingDiv.textContent = "...";
+        body.appendChild(typingDiv);
+        scrollToBottom();
+
+        // C) Mandar los datos a Python usando FETCH (AJAX)
+        try {
+            const response = await fetch('/chat_soporte', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: mensaje }),
+            });
+
+            const data = await response.json();
+            
+            // D) Quitar "escribiendo" y poner respuesta real de la IA (¡AQUÍ ESTABA EL ERROR!)
+            document.getElementById('typing-placeholder').remove();
+            
+            const botDiv = document.createElement('div');
+            botDiv.className = 'message bot-message';
+            botDiv.textContent = data.response;
+            body.appendChild(botDiv);
+            scrollToBottom();
+
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('typing-placeholder').remove();
+        }
+    }
+
+    // Permitir enviar con la tecla Enter
+    document.getElementById('chat-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            enviarMensaje();
+        }
+    });
+
+    // Mantener el scroll siempre abajo
+    function scrollToBottom() {
+        const body = document.getElementById('chat-body');
+        body.scrollTop = body.scrollHeight;
+    }
+</script>
+</body>
+</html>

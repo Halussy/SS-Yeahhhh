@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test - ITSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .intro-card{ display:flex; align-items:center; gap:14px; border-left:3px solid var(--dorado); margin-bottom:22px; padding:18px 22px; }
+        .intro-card h2{ font-size:17px; margin-bottom:4px; }
+        .intro-card p{ color:var(--texto-sec); font-size:13px; margin:0; }
+        .pregunta-card{ padding:20px 22px; margin-bottom:14px; }
+        .pregunta-card h4{ display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600; color:var(--tinta); margin-bottom:16px; }
+        .num-badge{
+            flex-shrink:0; width:24px; height:24px; border-radius:50%; background:var(--fondo);
+            color:var(--azul); font-family:var(--fuente-mono); font-size:11px; font-weight:600;
+            display:flex; align-items:center; justify-content:center; border:1px solid var(--linea);
+        }
+        .escala{
+            display:flex; justify-content:space-between; align-items:center;
+            background:var(--fondo); border-radius:var(--radio); padding:14px 18px;
+        }
+        .escala-label{ font-size:10px; color:var(--texto-mute); font-weight:600; letter-spacing:0.05em; }
+        .radio-label{ display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
+        .radio-label input{ accent-color:var(--azul); transform:scale(1.2); cursor:pointer; }
+        .radio-label span{ font-size:12px; color:var(--texto-sec); font-family:var(--fuente-mono); }
+        .btn-enviar-wrap{ margin-top:8px; }
+        .btn-enviar-wrap .btn-accion{ width:100%; justify-content:center; padding:13px; font-size:14px; }
+    </style>
+</head>
+<body>
+    <div class="top-navbar">
+        <h2>FES Cuautitlán · Campo 4</h2>
+        <a href="/mis_materias" class="logout-btn">← Cancelar y volver</a>
+    </div>
+    <div class="container">
+        <div class="card intro-card">
+            <div>
+                <h2>Evaluación de estilos de aprendizaje</h2>
+                <p>Estás evaluando la materia: <strong>{{ materia }}</strong></p>
+            </div>
+        </div>
+        <form action="/evaluar" method="POST">
+            <input type="hidden" name="materia_oculta" value="{{ materia }}">
+
+            {% for pregunta in lista_preguntas %}
+            {% set id_pregunta = loop.index0 %}
+            <div class="card pregunta-card">
+                <h4><span class="num-badge">{{ loop.index }}</span> {{ pregunta.pregunta }}</h4>
+                <div class="escala">
+                    <span class="escala-label">NADA</span>
+                    {% for valor in range(1, 6) %}
+                    <label class="radio-label">
+                        <input type="radio" name="p{{ id_pregunta }}" value="{{ valor }}" required>
+                        <span>{{ valor }}</span>
+                    </label>
+                    {% endfor %}
+                    <span class="escala-label">MUCHO</span>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="btn-enviar-wrap">
+                <button type="submit" class="btn-accion exito">Guardar evaluación y generar consejos IA</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

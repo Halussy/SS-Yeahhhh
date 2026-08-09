@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard docente - ITSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .page-title{ font-size:20px; margin-bottom:4px; }
+        .page-subtitle{ color:var(--texto-sec); font-size:13px; margin-bottom:26px; }
+
+        .alumno-card{ margin-bottom:24px; overflow:hidden; }
+        .alumno-header{ background:var(--azul); color:#fff; padding:13px 20px; display:flex; align-items:center; gap:12px; }
+        .alumno-header .avatar{
+            width:34px; height:34px; background:var(--dorado); border-radius:50%; display:flex;
+            align-items:center; justify-content:center; font-weight:600; color:var(--azul); font-size:14px; flex-shrink:0;
+        }
+        .alumno-header h3{ font-size:15px; margin-bottom:1px; color:#fff; }
+        .alumno-header small{ color:rgba(255,255,255,0.65); font-size:11px; font-family:var(--fuente-mono); }
+
+        .rec-texto{ white-space:pre-line; line-height:1.65; color:var(--tinta); max-width:360px; font-size:13px; }
+        .rec-corregida{ border-left:3px solid var(--senal); padding-left:10px; }
+
+        .btn-editar{
+            background:var(--superficie); color:var(--azul); border:1px solid var(--linea);
+            padding:7px 13px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer;
+            transition:.15s; white-space:nowrap; font-family:var(--fuente-cuerpo);
+        }
+        .btn-editar:hover{ background:var(--fondo); border-color:var(--azul); }
+    </style>
+</head>
+<body>
+
+<div class="top-navbar">
+    <h2>Dashboard docente · FES Cuautitlán Campo 4</h2>
+    <div class="navbar-right">
+        <span>{{ profesor }}</span>
+        <a href="/profesor/logout" class="logout-btn">Cerrar sesión</a>
+    </div>
+</div>
+<div class="tabs-container">
+    <a href="/profesor/dashboard" class="tab-link active">Recomendaciones</a>
+    <a href="/profesor/tareas" class="tab-link">Tareas y actividades</a>
+</div>
+{% from '_macros.html' import badge_estilo %}
+
+<div class="container ancho">
+    <h2 class="page-title">Recomendaciones de alumnos</h2>
+    <p class="page-subtitle">Revisa los resultados generados por la IA y corrige la recomendación si es necesario.</p>
+
+    {% set alumnos_list = alumnos | list %}
+    {% if alumnos_list | length == 0 %}
+        <div class="card alumno-card">
+            <div class="empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                <p>Aún no hay evaluaciones registradas por ningún alumno.</p>
+            </div>
+        </div>
+    {% else %}
+        {% for alumno in alumnos_list %}
+        <div class="card alumno-card">
+            <div class="alumno-header">
+                <div class="avatar">{{ alumno.nombre[0] }}</div>
+                <div>
+                    <h3>{{ alumno.nombre }}</h3>
+                    <small>Cuenta: {{ alumno.cuenta }}</small>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Materia</th>
+                        <th>Estilo detectado</th>
+                        <th>Recomendación activa</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ev in alumno.evaluaciones %}
+                    <tr>
+                        <td><strong>{{ ev.materia }}</strong></td>
+                        <td>{{ badge_estilo(ev.estilo) }}</td>
+                        <td>
+                            {% if ev.recomendacion_corregida %}
+                                <span class="tag tag-fix">Corregida por {{ ev.profesor_corrector }}</span><br>
+                                <div class="rec-texto rec-corregida">{{ ev.recomendacion_corregida }}</div>
+                            {% else %}
+                                <span class="tag tag-ia">Generada por IA</span><br>
+                                <div class="rec-texto">{{ ev.recomendacion_ia }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn-editar"
+                                data-cuenta="{{ alumno.cuenta }}"
+                                data-materia="{{ ev.materia }}"
+                                data-rec="{{ ev.recomendacion_corregida if ev.recomendacion_corregida else ev.recomendacion_ia }}"
+                                onclick="abrirModal(this)">Editar</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-head">
+            <h3>Corregir recomendación</h3>
+            <button class="modal-x" onclick="cerrarModal()">&times;</button>
+        </div>
+        <form method="POST" action="/profesor/corregir">
+            <input type="hidden" name="cuenta" id="modal_cuenta">
+            <input type="hidden" name="materia" id="modal_materia">
+            <div class="modal-body">
+                <div class="modal-info">
+                    Alumno: <strong id="modal_info_alumno"></strong> &nbsp;|&nbsp;
+                    Materia: <strong id="modal_info_materia"></strong>
+                </div>
+                <span class="modal-label">Recomendación actual:</span>
+                <div class="rec-original" id="modal_rec_original"></div>
+                <span class="modal-label" style="margin-top:14px; display:block;">Nueva recomendación:</span>
+                <textarea name="nueva_recomendacion" id="nueva_recomendacion" placeholder="Escribe aquí la recomendación corregida..."></textarea>
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn-accion fantasma" onclick="cerrarModal()">Cancelar</button>
+                <button type="submit" class="btn-accion exito">Guardar corrección</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function abrirModal(btn) {
+        const cuenta = btn.dataset.cuenta;
+        const materia = btn.dataset.materia;
+        const recActual = btn.dataset.rec;
+        document.getElementById('modal_cuenta').value = cuenta;
+        document.getElementById('modal_materia').value = materia;
+        document.getElementById('modal_info_alumno').textContent = cuenta;
+        document.getElementById('modal_info_materia').textContent = materia;
+        document.getElementById('modal_rec_original').textContent = recActual;
+        document.getElementById('nueva_recomendacion').value = recActual;
+        document.getElementById('modalOverlay').classList.add('active');
+        setTimeout(() => document.getElementById('nueva_recomendacion').focus(), 100);
+    }
+
+    function cerrarModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    document.getElementById('modalOverlay').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModal();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') cerrarModal();
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mis actividades - ITSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .seccion{ margin-bottom:38px; }
+        .seccion-titulo{
+            font-size:15px; font-weight:600; color:var(--azul); margin-bottom:16px; padding-bottom:10px;
+            border-bottom:1px solid var(--linea); display:flex; align-items:center; gap:8px;
+        }
+        .seccion-titulo svg{ width:17px; height:17px; color:var(--senal-txt); }
+
+        .act-card, .tarea-card{ margin-bottom:14px; overflow:hidden; }
+        .act-card{ border-left:3px solid var(--azul); }
+        .act-card-header{ background:var(--fondo); padding:10px 18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+        .act-materia{ font-weight:600; color:var(--azul); font-size:14px; }
+        .act-body{ padding:16px 18px; }
+        .act-texto{ font-size:13px; color:var(--tinta); line-height:1.8; white-space:pre-line; }
+
+        .tarea-card{ border-left:3px solid var(--dorado); }
+        .tarea-card-header{ background:#FBF6EB; padding:10px 18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+        .tarea-titulo{ font-weight:600; color:var(--dorado-txt); font-size:14px; }
+        .tarea-meta{ font-size:11px; color:var(--texto-mute); font-family:var(--fuente-mono); }
+        .tarea-body{ padding:16px 18px; }
+        .tarea-materia{ display:inline-block; background:var(--fondo); color:var(--texto-sec); font-size:11px; font-weight:600; padding:2px 10px; border-radius:20px; margin-bottom:10px; }
+        .tarea-desc{ font-size:13px; color:var(--tinta); line-height:1.7; margin-bottom:14px; }
+        .tarea-footer{
+            display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+            border-top:1px solid var(--linea); padding-top:12px;
+        }
+        .fecha-pill{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--texto-sec); }
+        .fecha-pill span{ background:var(--fondo); padding:4px 10px; border-radius:6px; font-weight:600; font-family:var(--fuente-mono); }
+
+        .entrega-box{ margin-top:14px; border-top:1px solid var(--linea); padding-top:14px; }
+        .entrega-form{ background:var(--fondo); border-radius:var(--radio); padding:14px 16px; margin-top:8px; }
+        .entrega-form label{ display:block; font-size:12px; font-weight:600; color:var(--texto-sec); margin-bottom:5px; }
+        .entrega-form input[type="file"], .entrega-form textarea{
+            width:100%; padding:9px 11px; border:1px solid var(--linea); border-radius:6px;
+            font-size:13px; margin-bottom:11px; font-family:var(--fuente-cuerpo); box-sizing:border-box; background:#fff;
+        }
+        .entrega-form textarea{ resize:vertical; min-height:64px; }
+        .entrega-hecha{
+            background:var(--fondo); border-radius:var(--radio); padding:12px 16px; margin-top:8px;
+            font-size:13px; color:var(--tinta); display:flex; flex-direction:column; gap:5px;
+        }
+        .calificacion-pill{ font-size:22px; font-weight:700; color:var(--azul); font-family:var(--fuente-display); }
+        .detalle-reentrega{ margin-top:10px; }
+        .detalle-reentrega summary{ font-size:12px; color:var(--texto-mute); cursor:pointer; }
+        .meta-fina{ color:var(--texto-mute); font-size:11px; }
+    </style>
+</head>
+<body>
+    <div class="top-navbar">
+        <h2>Facultad de Estudios Superiores Cuautitlán · Campo 4</h2>
+        <a href="/logout" class="logout-btn">Cerrar sesión</a>
+    </div>
+    {% set tab_activo = 'mis_actividades' %}
+    {% include '_tabs_alumno.html' %}
+    {% from '_macros.html' import badge_estilo %}
+
+    <div class="container">
+
+        <div class="seccion">
+            <div class="seccion-titulo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="4"/></svg>
+                Actividades generadas por IA
+            </div>
+
+            {% if actividades %}
+                {% for act in actividades %}
+                <div class="card act-card">
+                    <div class="act-card-header">
+                        <span class="act-materia">{{ act.materia }}</span>
+                        {{ badge_estilo(act.estilo) }}
+                    </div>
+                    <div class="act-body">
+                        {% if act.actividad_corregida %}
+                            <span class="tag tag-fix">Revisada por profesor</span>
+                            <div class="act-texto">{{ act.actividad_corregida }}</div>
+                        {% else %}
+                            <span class="tag tag-ia">Generada por IA</span>
+                            <div class="act-texto">{{ act.actividad }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                    <p>Aún no hay actividades. Completa el test de una materia para que la IA genere actividades personalizadas para ti.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="seccion">
+            <div class="seccion-titulo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+                Tareas asignadas por tu profesor
+            </div>
+
+            {% if tareas %}
+                {% for tarea in tareas %}
+                <div class="card tarea-card">
+                    <div class="tarea-card-header">
+                        <span class="tarea-titulo">{{ tarea.titulo }}</span>
+                        <span class="tarea-meta">Asignada por {{ tarea.profesor }} · {{ tarea.fecha_asignacion }}</span>
+                    </div>
+                    <div class="tarea-body">
+                        <span class="tarea-materia">{{ tarea.materia }}</span>
+                        <p class="tarea-desc">{{ tarea.descripcion }}</p>
+                        <div class="tarea-footer">
+                            <div class="fecha-pill">
+                                Entrega: <span>{{ tarea.fecha_entrega }}</span>
+                            </div>
+                            {% if tarea.archivo %}
+                                <a href="/uploads_tareas/{{ tarea.archivo }}" class="btn-accion fantasma" download>Descargar archivo</a>
+                            {% endif %}
+                        </div>
+
+                        <div class="entrega-box">
+                            {% set entrega = entregas.get(tarea.id) %}
+                            {% if entrega %}
+                                <div class="entrega-hecha">
+                                    {% if entrega.calificacion %}
+                                        <span class="tag tag-calificada">Calificada</span>
+                                        <span class="calificacion-pill">{{ entrega.calificacion }}</span>
+                                        {% if entrega.retroalimentacion %}
+                                            <span style="font-size:13px;"><strong>Retroalimentación:</strong> {{ entrega.retroalimentacion }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="tag tag-pendiente-cal">Entregada — pendiente de calificación</span>
+                                    {% endif %}
+                                    <span class="meta-fina">Entregada el {{ entrega.fecha_entrega }}</span>
+                                    {% if entrega.archivo %}
+                                        <a href="/uploads_tareas/{{ entrega.archivo }}" style="font-size:12px; color:var(--azul);" download>Ver mi entrega</a>
+                                    {% endif %}
+                                    {% if entrega.comentario %}
+                                        <span style="font-size:12px; color:var(--texto-sec);"><em>{{ entrega.comentario }}</em></span>
+                                    {% endif %}
+                                </div>
+                                <details class="detalle-reentrega">
+                                    <summary>Reemplazar entrega</summary>
+                                    <form method="POST" action="/entregar_tarea/{{ tarea.id }}" enctype="multipart/form-data" class="entrega-form">
+                                        <label>Archivo</label>
+                                        <input type="file" name="archivo_entrega" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.zip">
+                                        <label>Comentario (opcional)</label>
+                                        <textarea name="comentario" placeholder="Escribe un comentario para tu profesor..."></textarea>
+                                        <button type="submit" class="btn-accion primario">Reemplazar entrega</button>
+                                    </form>
+                                </details>
+                            {% else %}
+                                <form method="POST" action="/entregar_tarea/{{ tarea.id }}" enctype="multipart/form-data" class="entrega-form">
+                                    <label>Entregar tarea</label>
+                                    <input type="file" name="archivo_entrega" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.zip">
+                                    <label>Comentario (opcional)</label>
+                                    <textarea name="comentario" placeholder="Escribe un comentario para tu profesor..."></textarea>
+                                    <button type="submit" class="btn-accion primario">Entregar</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+                    <p>Tu profesor aún no ha asignado tareas.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Resultado del test - ITSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .resultado-card{ overflow:hidden; }
+        .resultado-header{
+            background:var(--azul); padding:36px 40px 30px; text-align:center;
+            border-bottom:3px solid var(--dorado); position:relative;
+        }
+        .resultado-header p{ color:rgba(255,255,255,0.6); font-size:13px; margin-bottom:14px; font-family:var(--fuente-mono); text-transform:uppercase; letter-spacing:0.06em; }
+        .senal-grande{ width:180px; height:64px; margin:0 auto 14px; }
+        .senal-grande path{ fill:none; stroke:var(--dorado); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+        .estilo-ganador{ color:#fff; font-family:var(--fuente-display); font-size:30px; font-weight:600; letter-spacing:0.01em; }
+        .materia-badge{
+            display:inline-block; background:rgba(255,255,255,0.12); color:#fff;
+            font-size:12px; padding:5px 14px; border-radius:20px; margin-top:14px; font-family:var(--fuente-mono);
+        }
+        .resultado-body{ padding:30px 40px 34px; }
+        .descripcion{ font-size:14px; color:var(--texto-sec); line-height:1.7; margin-bottom:24px; }
+        .tecnicas-box{
+            background:var(--fondo); border-left:3px solid var(--azul); border-radius:var(--radio);
+            padding:18px 22px; margin-bottom:26px;
+        }
+        .tecnicas-box h3{
+            font-size:12px; color:var(--azul); font-weight:600; text-transform:uppercase;
+            letter-spacing:0.05em; margin-bottom:12px; font-family:var(--fuente-cuerpo);
+        }
+        .tecnicas-box ul{ padding-left:18px; margin:0; }
+        .tecnicas-box li{ font-size:13px; color:var(--tinta); line-height:1.9; }
+        .acciones{ display:flex; gap:10px; flex-wrap:wrap; }
+        .acciones .btn-accion{ flex:1; justify-content:center; }
+    </style>
+</head>
+<body>
+    <div class="top-navbar">
+        <h2>FES Cuautitlán · Campo 4</h2>
+        <a href="/logout" class="logout-btn">Cerrar sesión</a>
+    </div>
+
+    <div class="container" style="max-width:600px;">
+        <div class="card resultado-card">
+            <div class="resultado-header">
+                <p>Tu estilo de aprendizaje predominante es</p>
+
+                {% if datos.estilo_ganador.nombre == 'Visual' %}
+                <svg class="senal-grande" viewBox="0 0 180 64"><path d="M0,32 C18,6 36,6 54,32 C72,58 90,58 108,32 C126,6 144,6 162,32 L180,32"/></svg>
+                {% elif datos.estilo_ganador.nombre == 'Auditivo' %}
+                <svg class="senal-grande" viewBox="0 0 180 64"><path d="M0,50 L27,14 L54,50 L81,14 L108,50 L135,14 L162,50 L180,50"/></svg>
+                {% elif datos.estilo_ganador.nombre == 'Kinestésico' %}
+                <svg class="senal-grande" viewBox="0 0 180 64"><path d="M0,50 L0,14 L45,14 L45,50 L90,50 L90,14 L135,14 L135,50 L180,50"/></svg>
+                {% else %}
+                <svg class="senal-grande" viewBox="0 0 180 64"><path d="M0,56 L36,56 L36,42 L72,42 L72,28 L108,28 L108,14 L144,14 L144,6 L180,6"/></svg>
+                {% endif %}
+
+                <div class="estilo-ganador">{{ datos.estilo_ganador.nombre }}</div>
+                <span class="materia-badge">{{ materia }}</span>
+            </div>
+            <div class="resultado-body">
+                <p class="descripcion">{{ datos.estilo_ganador.descripcion }}</p>
+
+                <div class="tecnicas-box">
+                    <h3>Técnicas recomendadas para ti</h3>
+                    <ul>
+                        {% for tecnica in datos.estilo_ganador.tecnicas %}
+                            <li>{{ tecnica }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="acciones">
+                    <a href="/mis_materias" class="btn-accion fantasma">← Mis materias</a>
+                    <a href="/mis_actividades" class="btn-accion exito">Ver mis actividades</a>
+                    <a href="/inicio" class="btn-accion primario">Ir al inicio</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

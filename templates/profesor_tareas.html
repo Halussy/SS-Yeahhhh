@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tareas y actividades - Docente ITSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .two-col{ display:grid; grid-template-columns:1fr 340px; gap:22px; align-items:start; }
+        .seccion-titulo{
+            font-size:14px; font-weight:600; color:var(--azul); margin-bottom:14px; padding-bottom:9px;
+            border-bottom:1px solid var(--linea); display:flex; align-items:center; gap:8px;
+        }
+        .seccion-titulo svg{ width:16px; height:16px; color:var(--senal-txt); }
+
+        .alumno-bloque{ margin-bottom:16px; overflow:hidden; }
+        .alumno-header{ background:var(--azul); padding:10px 16px; display:flex; align-items:center; gap:10px; }
+        .avatar{
+            width:28px; height:28px; background:var(--dorado); border-radius:50%; display:flex;
+            align-items:center; justify-content:center; font-weight:600; color:var(--azul); font-size:12px; flex-shrink:0;
+        }
+        .alumno-nombre{ color:#fff; font-size:13px; font-weight:600; }
+        .act-item{ padding:13px 16px; border-bottom:1px solid var(--linea); }
+        .act-item:last-child{ border-bottom:none; }
+        .act-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px; }
+        .act-materia{ font-weight:600; font-size:13px; color:var(--tinta); }
+        .act-texto{ font-size:12px; color:var(--texto-sec); line-height:1.7; white-space:pre-line; margin-bottom:10px; }
+        .btn-editar-act{
+            background:var(--superficie); color:var(--azul); border:1px solid var(--linea);
+            padding:6px 13px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; transition:.15s;
+            font-family:var(--fuente-cuerpo);
+        }
+        .btn-editar-act:hover{ background:var(--fondo); border-color:var(--azul); }
+
+        .tarea-item{ margin-bottom:11px; padding:13px 16px; border-left:3px solid var(--dorado); }
+        .tarea-titulo{ font-weight:600; font-size:13px; color:var(--tinta); margin-bottom:3px; }
+        .tarea-meta{ font-size:11px; color:var(--texto-mute); margin-bottom:8px; font-family:var(--fuente-mono); }
+        .tarea-badge{ display:inline-block; background:var(--fondo); color:var(--texto-sec); font-size:11px; font-weight:600; padding:2px 9px; border-radius:20px; }
+
+        .entregas-section{ margin-top:10px; border-top:1px dashed var(--linea); padding-top:10px; }
+        .entregas-toggle{
+            font-size:12px; color:var(--azul); font-weight:600; cursor:pointer; background:none;
+            border:none; padding:0; display:flex; align-items:center; gap:5px; font-family:var(--fuente-cuerpo);
+        }
+        .entrega-alumno{ background:var(--fondo); border-radius:var(--radio); padding:10px 12px; margin-top:8px; border-left:3px solid var(--dorado); }
+        .entrega-alumno-nombre{ font-weight:600; font-size:12px; color:var(--tinta); margin-bottom:5px; }
+        .entrega-meta{ font-size:11px; color:var(--texto-mute); margin-bottom:8px; }
+        .entrega-comentario{ font-size:12px; color:var(--texto-sec); font-style:italic; margin-bottom:8px; }
+        .calif-inline{ display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; align-items:flex-end; }
+        .calif-inline input, .calif-inline textarea{ border:1px solid var(--linea); border-radius:6px; padding:7px 10px; font-size:12px; font-family:var(--fuente-cuerpo); }
+        .calif-inline input[type="text"]{ width:76px; }
+        .calif-inline textarea{ flex:1; min-width:170px; resize:none; height:34px; }
+        .sin-entregas{ font-size:12px; color:var(--texto-mute); font-style:italic; }
+    </style>
+</head>
+<body>
+    <div class="top-navbar">
+        <h2>FES Cuautitlán · Campo 4</h2>
+        <a href="/profesor/logout" class="logout-btn">Cerrar sesión</a>
+    </div>
+    <div class="tabs-container">
+        <a href="/profesor/dashboard" class="tab-link">Recomendaciones</a>
+        <a href="/profesor/tareas" class="tab-link active">Tareas y actividades</a>
+    </div>
+    {% from '_macros.html' import badge_estilo %}
+
+    <div class="container ancho">
+        <div class="two-col">
+
+            <div>
+                <div class="seccion-titulo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="4"/></svg>
+                    Actividades generadas por IA
+                </div>
+                {% set act_list = actividades | list %}
+                {% if act_list | length == 0 %}
+                    <div class="empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                        <p>Ningún alumno ha completado el test aún.</p>
+                    </div>
+                {% else %}
+                    {% for alumno in act_list %}
+                    <div class="card alumno-bloque">
+                        <div class="alumno-header">
+                            <div class="avatar">{{ alumno.nombre[0] }}</div>
+                            <span class="alumno-nombre">{{ alumno.nombre }}</span>
+                        </div>
+                        {% for act in alumno.actividades %}
+                        <div class="act-item">
+                            <div class="act-top">
+                                <span class="act-materia">{{ act.materia }}</span>
+                                {{ badge_estilo(act.estilo) }}
+                            </div>
+                            {% if act.actividad_corregida %}
+                                <span class="tag tag-fix">Corregida por {{ act.profesor_corrector }}</span>
+                                <div class="act-texto">{{ act.actividad_corregida }}</div>
+                            {% else %}
+                                <span class="tag tag-ia">Generada por IA</span>
+                                <div class="act-texto">{{ act.actividad }}</div>
+                            {% endif %}
+                            <button class="btn-editar-act"
+                                data-id="{{ act.id }}"
+                                data-alumno="{{ alumno.nombre }}"
+                                data-materia="{{ act.materia }}"
+                                data-texto="{{ act.actividad_corregida if act.actividad_corregida else act.actividad }}"
+                                onclick="abrirModal(this)">Corregir</button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="seccion-titulo" style="margin-top:28px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+                    Tareas que has asignado
+                </div>
+                {% if tareas %}
+                    {% for tarea in tareas %}
+                    <div class="card tarea-item">
+                        <div class="tarea-titulo">{{ tarea.titulo }}</div>
+                        <div class="tarea-meta">{{ tarea.nombre_alumno }} · {{ tarea.fecha_asignacion }}</div>
+                        <span class="tarea-badge">{{ tarea.materia }}</span>
+                        <span class="tarea-badge" style="margin-left:6px;">Entrega: {{ tarea.fecha_entrega }}</span>
+
+                        {% set ents = entregas_por_tarea.get(tarea.id, []) %}
+                        <div class="entregas-section">
+                            <button class="entregas-toggle" onclick="toggleEntregas('ents-{{ tarea.id }}')">
+                                {{ ents|length }} entrega{{ 's' if ents|length != 1 else '' }} recibida{{ 's' if ents|length != 1 else '' }}
+                            </button>
+                            <div id="ents-{{ tarea.id }}" style="display:none; margin-top:8px;">
+                                {% if ents %}
+                                    {% for entrega in ents %}
+                                    <div class="entrega-alumno">
+                                        <div class="entrega-alumno-nombre">{{ entrega.nombre_alumno }}</div>
+                                        <div class="entrega-meta">Entregado el {{ entrega.fecha_entrega }}</div>
+                                        {% if entrega.comentario %}
+                                            <div class="entrega-comentario">"{{ entrega.comentario }}"</div>
+                                        {% endif %}
+                                        {% if entrega.archivo %}
+                                            <a href="/uploads_tareas/{{ entrega.archivo }}" download style="font-size:12px; color:var(--azul); font-weight:600;">Descargar entrega</a>
+                                        {% endif %}
+                                        <div style="margin-top:8px;">
+                                        {% if entrega.calificacion %}
+                                            <span class="tag tag-calificada-p">Calificada: {{ entrega.calificacion }}</span>
+                                            {% if entrega.retroalimentacion %}
+                                                <p style="font-size:12px; color:var(--texto-sec); margin-top:4px;">{{ entrega.retroalimentacion }}</p>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="tag tag-sin-calificar">Sin calificar</span>
+                                        {% endif %}
+                                        </div>
+                                        <form method="POST" action="/profesor/calificar_entrega" class="calif-inline">
+                                            <input type="hidden" name="entrega_id" value="{{ entrega.id }}">
+                                            <input type="text" name="calificacion" placeholder="Calif." value="{{ entrega.calificacion or '' }}" required>
+                                            <textarea name="retroalimentacion" placeholder="Retroalimentación...">{{ entrega.retroalimentacion or '' }}</textarea>
+                                            <button type="submit" class="btn-accion exito">Guardar</button>
+                                        </form>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="sin-entregas">Ningún alumno ha entregado esta tarea todavía.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+                        <p>Aún no has asignado tareas.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div>
+                <div class="form-card">
+                    <div class="form-header">Asignar nueva tarea</div>
+                    <div class="form-body">
+                        <form method="POST" action="/profesor/asignar_tarea" enctype="multipart/form-data">
+                            <label>Alumno</label>
+                            <select name="cuenta" required>
+                                <option value="">Seleccionar alumno...</option>
+                                {% for alumno in todos_alumnos %}
+                                <option value="{{ alumno.cuenta }}">{{ alumno.nombre }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label>Materia</label>
+                            <select name="materia" required>
+                                <option value="">Seleccionar materia...</option>
+                                {% for materia in materias %}
+                                <option value="{{ materia }}">{{ materia }}</option>
+                                {% endfor %}
+                            </select>
+
+                            <label>Título de la tarea</label>
+                            <input type="text" name="titulo" required>
+
+                            <label>Descripción</label>
+                            <textarea name="descripcion" required></textarea>
+
+                            <label>Fecha de entrega</label>
+                            <input type="date" name="fecha_entrega" required>
+
+                            <label>Archivo adjunto (opcional)</label>
+                            <input type="file" name="archivo" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.zip">
+
+                            <button type="submit" class="btn-accion primario" style="width:100%; justify-content:center; margin-top:4px;">Asignar tarea</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-head">
+                <h3>Corregir actividad IA</h3>
+                <button class="modal-x" onclick="cerrarModal()">&times;</button>
+            </div>
+            <form method="POST" action="/profesor/corregir_actividad">
+                <input type="hidden" name="actividad_id" id="modal_id">
+                <div class="modal-body">
+                    <div class="modal-info">
+                        Alumno: <strong id="modal_alumno"></strong> &nbsp;|&nbsp;
+                        Materia: <strong id="modal_materia"></strong>
+                    </div>
+                    <span class="modal-label">Actividad actual:</span>
+                    <div class="rec-original" id="modal_texto_original"></div>
+                    <span class="modal-label">Versión corregida:</span>
+                    <textarea name="actividad_corregida" id="modal_textarea" placeholder="Escribe aquí la actividad corregida..."></textarea>
+                </div>
+                <div class="modal-foot">
+                    <button type="button" class="btn-accion fantasma" onclick="cerrarModal()">Cancelar</button>
+                    <button type="submit" class="btn-accion exito">Guardar corrección</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function abrirModal(btn) {
+            document.getElementById('modal_id').value        = btn.dataset.id;
+            document.getElementById('modal_alumno').textContent  = btn.dataset.alumno;
+            document.getElementById('modal_materia').textContent = btn.dataset.materia;
+            document.getElementById('modal_texto_original').textContent = btn.dataset.texto;
+            document.getElementById('modal_textarea').value   = btn.dataset.texto;
+            document.getElementById('modalOverlay').classList.add('active');
+            setTimeout(() => document.getElementById('modal_textarea').focus(), 100);
+        }
+        function cerrarModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+        document.getElementById('modalOverlay').addEventListener('click', e => {
+            if (e.target === document.getElementById('modalOverlay')) cerrarModal();
+        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
+
+        function toggleEntregas(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>

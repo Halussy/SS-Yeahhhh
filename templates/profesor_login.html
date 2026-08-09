@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso Profesores - ITSE</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; position: relative; }
+        body::before { content: ''; position: fixed; inset: 0; background: url('/static/biblioteca.jpg') center/cover no-repeat; z-index: 0; }
+        .login-wrapper { position: relative; z-index: 2; }
+        .login-wrapper { background: white; padding: 50px 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 420px; border-top: 5px solid #D4A12A; }
+        .logo-area { text-align: center; margin-bottom: 30px; }
+        .logo-area h1 { color: #002B5C; font-size: 22px; margin-bottom: 5px; }
+        .logo-area p { color: #888; font-size: 14px; }
+        .badge { display: inline-block; background: #002B5C; color: #D4A12A; font-size: 12px; font-weight: bold; padding: 4px 12px; border-radius: 20px; margin-bottom: 15px; letter-spacing: 1px; text-transform: uppercase; }
+        label { display: block; font-size: 13px; font-weight: bold; color: #555; margin-bottom: 6px; }
+        input { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 6px; font-size: 15px; transition: 0.2s; margin-bottom: 20px; }
+        input:focus { outline: none; border-color: #002B5C; box-shadow: 0 0 0 3px rgba(0,43,92,0.1); }
+        .btn { width: 100%; padding: 13px; background: #002B5C; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn:hover { background: #D4A12A; color: #002B5C; }
+        .error { background: #fdecea; color: #c0392b; padding: 12px 15px; border-radius: 6px; font-size: 14px; margin-bottom: 20px; border-left: 4px solid #e74c3c; }
+        .volver { display: block; text-align: center; margin-top: 20px; color: #888; font-size: 13px; text-decoration: none; }
+        .volver:hover { color: #002B5C; }
+
+        .field { text-align: left; margin-bottom: 16px; }
+        .input-wrap { display: flex; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; }
+        .input-wrap input { flex: 1; padding: 11px 12px; border: none; outline: none; font-size: 14px; font-family: inherit; }
+        .input-wrap .icon { padding: 0 12px; background: #f5f5f5; border-left: 1px solid #ddd; display: flex; align-items: center; color: #888; font-size: 16px; cursor: pointer; }
+        .captcha-box { background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 14px; margin-bottom: 16px; text-align: center; }
+        .captcha-box p { font-size: 13px; color: #555; margin-bottom: 10px; }
+        .captcha-img-wrap { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+        .captcha-img-wrap img { border-radius: 4px; border: 1px solid #ccc; }
+        .captcha-refresh { background: none; border: 1px solid #ccc; border-radius: 4px; padding: 6px 8px; cursor: pointer; color: #666; font-size: 14px; }
+        .captcha-refresh:hover { background: #eee; }
+        .captcha-input { width: 100%; padding: 9px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; text-align: center; letter-spacing: 4px; font-family: monospace; }
+        .links { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; text-align: center; }
+        .links a { font-size: 13px; color: #002B5C; text-decoration: none; }
+        .links a:hover { text-decoration: underline; }
+        .links .volver { color: #888; }
+
+        /* Tooltips */
+        .input-wrap { position: relative; }
+        .icon[title] { position: relative; }
+        .icon[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            right: 0;
+            top: calc(100% + 6px);
+            background: #222;
+            color: white;
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 5px;
+            white-space: nowrap;
+            z-index: 100;
+            pointer-events: none;
+            max-width: 220px;
+            white-space: normal;
+            text-align: center;
+            line-height: 1.4;
+        }
+        .icon[title]:hover::before {
+            content: '';
+            position: absolute;
+            right: 12px;
+            top: calc(100% + 1px);
+            border: 5px solid transparent;
+            border-bottom-color: #222;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="logo-area">
+            <img src="/static/Logo UNAM.png" alt="Logo FESC" style="width:70px; height:70px; margin: 0 auto 14px; display:block;">
+            <span class="badge"> Portal Docente</span>
+            <h1>Facultad de Estudios Superiores Cuautitlán</h1>
+            <p>Acceso exclusivo para profesores</p>
+        </div>
+
+        {% if error %}
+            <div class="error">️ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            <div class="field">
+                <label>Usuario y/o cuenta UNAM: <span style="color:#e74c3c">*</span></label>
+                <div class="input-wrap">
+                    <input type="text" name="usuario" placeholder="Usuario" required autofocus>
+                    <span class="icon" title="Capturar nombre de Usuario ó los 9 dígitos del No. de Cuenta UNAM">&#128100;</span>
+                </div>
+            </div>
+            <div class="field">
+                <label>Contraseña: <span style="color:#e74c3c">*</span></label>
+                <div class="input-wrap">
+                    <input type="password" name="password" id="pwd" placeholder="**********" required>
+                    <span class="icon" onclick="togglePwd()" title="Mostrar / Ocultar contraseña">&#128065;</span>
+                </div>
+            </div>
+
+            <div class="captcha-box">
+                <p>Por favor valide el Captcha</p>
+                <div class="captcha-img-wrap">
+                    <img id="captcha-img" src="/captcha" width="200" height="70" alt="CAPTCHA">
+                    <button type="button" class="captcha-refresh" onclick="refrescarCaptcha()" title="Nuevo código">&#8635;</button>
+                </div>
+                <input type="text" name="captcha_input" class="captcha-input" placeholder="Escribe el código" required autocomplete="off">
+            </div>
+
+            <button type="submit" class="btn">Ingresar</button>
+        </form>
+
+        <div class="links">
+            <a href="/profesor/recuperar_contrasena">Recuperar contraseña</a>
+            <a href="/" class="volver">← Volver a la pantalla de inicio</a>
+        </div>
+
+        <script>
+            function togglePwd() {
+                const f = document.getElementById('pwd');
+                f.type = f.type === 'password' ? 'text' : 'password';
+            }
+            function refrescarCaptcha() {
+                document.getElementById('captcha-img').src = '/captcha?' + Date.now();
+            }
+        </script>
+    </div>
+</body>
+</html>
