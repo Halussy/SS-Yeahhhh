@@ -3,208 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <title>Inicio - ITSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #f5f6fa; margin: 0; padding: 0; }
-        
-        /* Barra Superior */
-        .top-navbar { background-color: #002B5C; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; color: white; border-bottom: 2px solid #D4A12A;}
-        .top-navbar h2 { margin: 0; font-size: 18px; color: #D4A12A; letter-spacing: 1px; }
-        .logout-btn { background: transparent; color: white; text-decoration: none; padding: 8px 15px; border: 1px solid white; border-radius: 4px; transition: 0.3s; font-size: 14px;}
-        .logout-btn:hover { background: #e74c3c; color: white; border-color: #e74c3c;}
-        
-        /* Pestañas (Tabs) */
-        .tabs-container { background-color: #002B5C; padding: 0 30px; display: flex; gap: 5px; }
-        .tab-link { padding: 12px 20px; color: white; text-decoration: none; font-weight: bold; font-size: 14px; border-radius: 8px 8px 0 0; opacity: 0.7; transition: 0.3s;}
-        .tab-link:hover { opacity: 1; background-color: rgba(255,255,255,0.1); }
-        .tab-link.active { background-color: #f5f6fa; color: #002B5C; opacity: 1; border-top: 3px solid #D4A12A;}
+        .welcome-banner{ padding:24px 26px; margin-bottom:30px; border-left:4px solid var(--azul); }
+        .welcome-banner h2{ font-size:19px; margin-bottom:5px; }
+        .welcome-banner p{ color:var(--texto-sec); font-size:13px; }
 
-        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
-        .welcome-banner { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px; border-left: 5px solid #002B5C; }
-        
-        /* Tarjetas de IA */
-        .ia-card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid #27ae60; margin-bottom: 20px;}
-        .ia-card h4 { margin: 0 0 10px 0; color: #D4A12A; font-size: 18px;}
-        .ia-card p { margin: 0; color: #444; line-height: 1.6; white-space: pre-line; font-size: 15px;}
+        .seccion-titulo{
+            font-size:15px; font-weight:600; color:var(--azul); margin-bottom:18px; padding-bottom:10px;
+            border-bottom:1px solid var(--linea); display:flex; align-items:center; gap:8px;
+        }
+        .seccion-titulo svg{ width:17px; height:17px; color:var(--senal-txt); }
+
+        .ia-card{ padding:22px 24px; margin-bottom:16px; border-left:4px solid var(--senal); }
+        .ia-card h4{ font-size:16px; margin-bottom:10px; color:var(--dorado-txt); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+        .ia-card h4 .estilo-tag{ color:var(--texto-mute); font-size:12px; font-weight:400; font-family:var(--fuente-mono); }
+        .ia-card p{ color:var(--tinta); line-height:1.7; white-space:pre-line; font-size:14px; }
     </style>
 </head>
 <body>
     <div class="top-navbar">
         <h2>Facultad de Estudios Superiores Cuautitlán - Campo 4</h2>
-        <a href="/logout" class="logout-btn">Cerrar Sesión</a>
+        <a href="/logout" class="logout-btn">Cerrar sesión</a>
     </div>
     <div class="tabs-container">
-        <a href="/inicio" class="tab-link active"> Inicio (Recomendaciones IA)</a>
-        <a href="/mis_materias" class="tab-link"> Mis Materias (Test)</a>
-        <a href="/materias" class="tab-link"> Plan de Estudios</a>
-        <a href="/mis_actividades" class="tab-link"> Actividades y Tareas</a>
+        <a href="/inicio" class="tab-link active">Inicio (Recomendaciones IA)</a>
+        <a href="/mis_materias" class="tab-link">Mis Materias (Test)</a>
+        <a href="/materias" class="tab-link">Plan de Estudios</a>
+        <a href="/mis_actividades" class="tab-link">Actividades y Tareas</a>
     </div>
 
     <div class="container">
-        <div class="welcome-banner">
-            <h2 style="margin: 0 0 8px 0; color: #002B5C;">Bienvenido a tu panel, {{ alumno.nombre }}</h2>
-            <p style="margin: 0; color: #666; font-size: 15px;">
-                {{ alumno.semestre }} | Ing. en Telecomunicaciones, Sistemas y Electrónica
-            </p>
+        <div class="card welcome-banner">
+            <h2>Bienvenido a tu panel, {{ alumno.nombre }}</h2>
+            <p>{{ alumno.semestre }} · Ing. en Telecomunicaciones, Sistemas y Electrónica</p>
         </div>
 
-        <h3 style="color: #002B5C; display: flex; align-items: center; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">
-            <span style="font-size: 24px; margin-right: 10px;"></span> Sugerencias de Estudio Personalizadas
-        </h3>
-        
+        <div class="seccion-titulo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="4"/></svg>
+            Sugerencias de estudio personalizadas
+        </div>
+
         {% if tips_ia %}
             {% for tip in tips_ia %}
-            <div class="ia-card">
-                <h4>{{ tip.materia }} <span style="color: #7f8c8d; font-size: 14px; font-weight: normal;">(Estilo {{ tip.estilo }})</span></h4>
+            <div class="card ia-card">
+                <h4>{{ tip.materia }} <span class="estilo-tag">(Estilo {{ tip.estilo }})</span></h4>
                 <p>{{ tip.consejo }}</p>
             </div>
             {% endfor %}
         {% else %}
-            <div style="background: #e9ecef; padding: 30px; border-radius: 8px; text-align: center; color: #666;">
-                Aún no has evaluado ninguna materia. Ve a la pestaña de "Mis Materias" para hacer tu primer test y la Inteligencia Artificial generará consejos para ti.
+            <div class="empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                <p>Aún no has evaluado ninguna materia. Ve a la pestaña de "Mis Materias" para hacer tu primer test y la Inteligencia Artificial generará consejos para ti.</p>
             </div>
         {% endif %}
     </div>
-    <style>
-    /* --- Estilos CSS para el Chatbot --- */
-    #chat-container {
-        position: fixed;
-        bottom: 20px;
-        left: 20px; /* Posición inferior izquierda */
-        z-index: 1000; /* Siempre por encima de todo */
-        font-family: 'Segoe UI', sans-serif;
-    }
-
-    /* El ícono flotante circular */
-    #chat-icon {
-        width: 60px;
-        height: 60px;
-        background-color: #002B5C; /* Azul FESC */
-        border-radius: 50%;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        font-size: 30px;
-        transition: transform 0.3s ease;
-        border: 3px solid #D4A12A; /* Borde Oro FESC */
-    }
-
-    #chat-icon:hover {
-        transform: scale(1.1) rotate(5deg);
-    }
-
-    /* La ventana del chat (oculta por defecto) */
-    #chat-window {
-        display: none; /* Oculto inicialmente */
-        width: 320px;
-        height: 450px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 5px 25px rgba(0,0,0,0.15);
-        position: absolute;
-        bottom: 80px; /* Arriba del ícono */
-        left: 0;
-        overflow: hidden;
-        flex-direction: column;
-        border: 2px solid #eee;
-    }
-
-    /* Encabezado del chat */
-    .chat-header {
-        background-color: #002B5C;
-        color: white;
-        padding: 15px;
-        font-weight: bold;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 3px solid #D4A12A;
-    }
-
-    /* Placeholder para la imagen de la mascota */
-    .mascot-img-placeholder {
-        width: 30px;
-        height: 30px;
-        background-color: #ccc; /* Gris temporal */
-        border-radius: 50%;
-        margin-right: 10px;
-        display: inline-block;
-        border: 2px solid white;
-    }
-
-    .close-chat {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 20px;
-        cursor: pointer;
-        opacity: 0.7;
-    }
-    .close-chat:hover { opacity: 1; }
-
-    /* Cuerpo del chat donde salen los mensajes */
-    #chat-body {
-        flex: 1;
-        padding: 15px;
-        overflow-y: auto; /* Scroll si hay muchos mensajes */
-        background-color: #f9f9f9;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    /* Estilos de las burbujas de mensaje */
-    .message {
-        padding: 10px 14px;
-        border-radius: 8px;
-        max-width: 80%;
-        font-size: 14px;
-        line-height: 1.4;
-    }
-
-    .bot-message {
-        background-color: #e2e8f0;
-        color: #333;
-        align-self: flex-start;
-        border-radius: 0 8px 8px 8px;
-    }
-
-    .user-message {
-        background-color: #002B5C;
-        color: white;
-        align-self: flex-end;
-        border-radius: 8px 8px 0 8px;
-    }
-
-    /* Pie del chat con el input */
-    .chat-footer {
-        padding: 10px;
-        background: white;
-        border-top: 1px solid #eee;
-        display: flex;
-        gap: 5px;
-    }
-
-    #chat-input {
-        flex: 1;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 20px;
-        outline: none;
-    }
-
-    #send-btn {
-        background-color: #D4A12A;
-        color: #002B5C;
-        border: none;
-        padding: 0 15px;
-        border-radius: 20px;
-        font-weight: bold;
-        cursor: pointer;
-    }
-</style>
 
 <div id="chat-container">
     <div id="chat-window">
@@ -216,7 +72,7 @@
         </div>
         <div id="chat-body">
             <div class="message bot-message">
-                ¡Hola! Soy tu compañero de apoyo ITSE.  ¿Tienes alguna duda sobre tus estilos de aprendizaje o necesitas motivación? 
+                ¡Hola! Soy tu compañero de apoyo ITSE. ¿Tienes alguna duda sobre tus estilos de aprendizaje o necesitas motivación?
             </div>
         </div>
         <div class="chat-footer">
@@ -231,37 +87,30 @@
 </div>
 
 <script>
-    /* --- Javascript para la funcionalidad en tiempo real --- */
-    
-    // 1. Función para abrir/cerrar la ventana
     function toggleChat() {
         const window = document.getElementById('chat-window');
         if (window.style.display === 'flex') {
             window.style.display = 'none';
         } else {
             window.style.display = 'flex';
-            // Auto-focus al input al abrir
             document.getElementById('chat-input').focus();
         }
     }
 
-    // 2. Función para enviar el mensaje al backend (app.py)
     async function enviarMensaje() {
         const input = document.getElementById('chat-input');
         const body = document.getElementById('chat-body');
         const mensaje = input.value.trim();
 
-        if (mensaje === "") return; // No enviar vacío
+        if (mensaje === "") return;
 
-        // A) Mostrar mensaje del usuario inmediatamente en pantalla
-        input.value = ''; // Limpiar input
+        input.value = '';
         const userDiv = document.createElement('div');
         userDiv.className = 'message user-message';
         userDiv.textContent = mensaje;
         body.appendChild(userDiv);
         scrollToBottom();
 
-        // B) Mostrar indicador de "escribiendo..." temporal
         const typingDiv = document.createElement('div');
         typingDiv.className = 'message bot-message';
         typingDiv.id = 'typing-placeholder';
@@ -269,7 +118,6 @@
         body.appendChild(typingDiv);
         scrollToBottom();
 
-        // C) Mandar los datos a Python usando FETCH (AJAX)
         try {
             const response = await fetch('/chat_soporte', {
                 method: 'POST',
@@ -280,10 +128,9 @@
             });
 
             const data = await response.json();
-            
-            // D) Quitar "escribiendo" y poner respuesta real de la IA (¡AQUÍ ESTABA EL ERROR!)
+
             document.getElementById('typing-placeholder').remove();
-            
+
             const botDiv = document.createElement('div');
             botDiv.className = 'message bot-message';
             botDiv.textContent = data.response;
@@ -296,18 +143,16 @@
         }
     }
 
-    // Permitir enviar con la tecla Enter
     document.getElementById('chat-input').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             enviarMensaje();
         }
     });
 
-    // Mantener el scroll siempre abajo
     function scrollToBottom() {
         const body = document.getElementById('chat-body');
         body.scrollTop = body.scrollHeight;
     }
 </script>
-    </body>
+</body>
 </html>

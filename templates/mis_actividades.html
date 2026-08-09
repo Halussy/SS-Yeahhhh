@@ -59,8 +59,12 @@
         <h2>Facultad de Estudios Superiores Cuautitlán · Campo 4</h2>
         <a href="/logout" class="logout-btn">Cerrar sesión</a>
     </div>
-    {% set tab_activo = 'mis_actividades' %}
-    {% include '_tabs_alumno.html' %}
+    <div class="tabs-container">
+        <a href="/inicio" class="tab-link">Inicio (Recomendaciones IA)</a>
+        <a href="/mis_materias" class="tab-link">Mis Materias (Test)</a>
+        <a href="/materias" class="tab-link">Plan de Estudios</a>
+        <a href="/mis_actividades" class="tab-link active">Actividades y Tareas</a>
+    </div>
     {% from '_macros.html' import badge_estilo %}
 
     <div class="container">

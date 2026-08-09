@@ -2,53 +2,46 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Recuperar Contraseña - Docente ITSE</title>
+    <title>Recuperar contraseña - Docente ITSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; position: relative; }
-        body::before { content: ''; position: fixed; inset: 0; background: url('/static/biblioteca.jpg') center/cover no-repeat; z-index: 0; }
-        .box { position: relative; z-index: 2; background: white; padding: 36px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 340px; text-align: center; border-top: 6px solid #002B5C; }
-        h2 { color: #002B5C; font-size: 20px; margin-bottom: 6px; }
-        .sub { font-size: 13px; color: #666; margin-bottom: 22px; line-height: 1.5; }
-        .field { text-align: left; margin-bottom: 16px; }
-        .field label { display: block; font-size: 13px; font-weight: bold; color: #333; margin-bottom: 5px; }
-        .field label span { color: #e74c3c; }
-        .input-wrap { display: flex; border: 1px solid #ccc; border-radius: 5px; overflow: hidden; }
-        .input-wrap input { flex: 1; padding: 11px 12px; border: none; outline: none; font-size: 14px; font-family: inherit; }
-        .input-wrap .icon { padding: 0 12px; background: #f5f5f5; border-left: 1px solid #ccc; display: flex; align-items: center; color: #888; font-size: 16px; }
-        .btn { width: 100%; padding: 12px; background: #002B5C; color: white; border: none; border-radius: 5px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 4px; }
-        .btn:hover { background: #001a38; }
-        .mensaje { background: #e8f5e9; color: #1a5c22; padding: 12px; border-radius: 6px; font-size: 14px; margin-bottom: 16px; border-left: 4px solid #27ae60; text-align: left; }
-        .error { background: #fdecea; color: #c0392b; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 14px; border-left: 4px solid #e74c3c; }
-        .volver { display: block; margin-top: 16px; font-size: 13px; color: #888; text-decoration: none; }
-        .volver:hover { color: #002B5C; }
+        :root{ --auth-bg: url('/static/biblioteca.jpg'); }
     </style>
 </head>
 <body>
-    <div class="box">
-        <img src="/static/Logo UNAM.png" alt="Logo UNAM" style="width:80px;height:80px;object-fit:contain;margin:0 auto 14px;display:block;">
-        <h2>Recuperar Contraseña</h2>
-        <p class="sub">Ingresa tu nombre de usuario y te mostraremos tu contraseña actual.</p>
+    <div class="auth-shell">
+        <div class="auth-box acento-verde">
+            <img src="/static/Logo UNAM.png" alt="Logo UNAM" class="logo">
+            <h2>Recuperar contraseña</h2>
+            <p class="subt">Ingresa tu nombre de usuario y te mostraremos tu contraseña actual</p>
 
-        {% if mensaje %}
-            <div class="mensaje">{{ mensaje }}</div>
-        {% endif %}
-        {% if error %}
-            <div class="error">{{ error }}</div>
-        {% endif %}
+            {% if mensaje %}
+                <div class="mensaje-ok">{{ mensaje }}</div>
+            {% endif %}
+            {% if error %}
+                <div class="mensaje-error">{{ error }}</div>
+            {% endif %}
 
-        <form method="POST">
-            <div class="field">
-                <label>Usuario: <span>*</span></label>
-                <div class="input-wrap">
-                    <input type="text" name="usuario" placeholder="Usuario" required autofocus>
-                    <span class="icon">&#128100;</span>
+            <form method="POST">
+                <div class="campo">
+                    <label>Usuario <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <input type="text" name="usuario" placeholder="Usuario" required autofocus>
+                        <span class="icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
+                        </span>
+                    </div>
                 </div>
-            </div>
-            <button type="submit" class="btn">Recuperar</button>
-        </form>
+                <button type="submit" class="btn verde">Recuperar contraseña</button>
+            </form>
 
-        <a href="/profesor/login" class="volver">← Volver al inicio de sesión</a>
+            <div class="auth-links">
+                <a href="/profesor/login" class="volver">← Volver al inicio de sesión</a>
+            </div>
+        </div>
     </div>
 </body>
 </html>

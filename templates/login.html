@@ -3,107 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <title>Portal Escolar - ITSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; position: relative; }
-        body::before { content: ''; position: fixed; inset: 0; background: url('/static/biblioteca.jpg') center/cover no-repeat; z-index: 0; }
-        .login-box { position: relative; z-index: 2; background: white; padding: 36px 36px 28px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 340px; text-align: center; border-top: 6px solid #D4A12A; }
-        h2 { color: #002B5C; font-size: 22px; margin-bottom: 4px; }
-        .carrera { font-size: 12px; color: #666; margin-bottom: 22px; line-height: 1.4; }
-        .field { text-align: left; margin-bottom: 16px; }
-        .field label { display: block; font-size: 13px; font-weight: bold; color: #333; margin-bottom: 5px; }
-        .field label span { color: #e74c3c; }
-        .input-wrap { display: flex; border: 1px solid #ccc; border-radius: 5px; overflow: hidden; }
-        .input-wrap input { flex: 1; padding: 11px 12px; border: none; outline: none; font-size: 14px; font-family: inherit; }
-        .input-wrap .icon { padding: 0 12px; background: #f5f5f5; border-left: 1px solid #ccc; display: flex; align-items: center; color: #888; font-size: 16px; cursor: pointer; }
-        .captcha-box { background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 14px; margin-bottom: 16px; text-align: center; }
-        .captcha-box p { font-size: 13px; color: #555; margin-bottom: 10px; }
-        .captcha-img-wrap { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
-        .captcha-img-wrap img { border-radius: 4px; border: 1px solid #ccc; }
-        .captcha-refresh { background: none; border: 1px solid #ccc; border-radius: 4px; padding: 6px 8px; cursor: pointer; color: #666; font-size: 14px; transition: 0.2s; }
-        .captcha-refresh:hover { background: #eee; }
-        .captcha-input { width: 100%; padding: 9px 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; text-align: center; letter-spacing: 4px; font-family: monospace; }
-        .btn { width: 100%; padding: 12px; background: #002B5C; color: #D4A12A; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 4px; }
-        .btn:hover { background: #001a38; }
-        .error { background: #fdecea; color: #c0392b; padding: 10px; border-radius: 5px; font-size: 13px; margin-bottom: 14px; border-left: 4px solid #e74c3c; }
-        .links { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
-        .links a { font-size: 13px; color: #002B5C; text-decoration: none; }
-        .links a:hover { text-decoration: underline; }
-        .links .volver { color: #888; }
-
-        /* Tooltips */
-        .input-wrap { position: relative; }
-        .icon[title] { position: relative; }
-        .icon[title]:hover::after {
-            content: attr(title);
-            position: absolute;
-            right: 0;
-            top: calc(100% + 6px);
-            background: #222;
-            color: white;
-            font-size: 12px;
-            padding: 6px 10px;
-            border-radius: 5px;
-            white-space: nowrap;
-            z-index: 100;
-            pointer-events: none;
-            max-width: 220px;
-            white-space: normal;
-            text-align: center;
-            line-height: 1.4;
-        }
-        .icon[title]:hover::before {
-            content: '';
-            position: absolute;
-            right: 12px;
-            top: calc(100% + 1px);
-            border: 5px solid transparent;
-            border-bottom-color: #222;
-            z-index: 100;
-        }
+        :root{ --auth-bg: url('/static/biblioteca.jpg'); }
     </style>
 </head>
 <body>
-    <div class="login-box">
-        <img src="/static/Logo UNAM.png" alt="Logo UNAM" style="width:90px;height:90px;object-fit:contain;margin:0 auto 14px;display:block;">
-        <h2>Portal de Evaluación</h2>
-        <div class="carrera">Ingeniería en Telecomunicaciones, Sistemas y Electrónica</div>
+    <div class="auth-shell">
+        <div class="auth-box">
+            <img src="/static/Logo UNAM.png" alt="Logo UNAM" class="logo">
+            <h2>Portal de Evaluación</h2>
+            <p class="subt">Ingeniería en Telecomunicaciones, Sistemas y Electrónica</p>
 
-        {% if error %}
-            <div class="error">{{ error }}</div>
-        {% endif %}
+            {% if error %}
+                <div class="mensaje-error">{{ error }}</div>
+            {% endif %}
 
-        <form method="POST">
-            <div class="field">
-                <label>Usuario y/o cuenta UNAM: <span>*</span></label>
-                <div class="input-wrap">
-                    <input type="text" name="numero_cuenta" placeholder="Usuario" required autofocus>
-                    <span class="icon" title="Capturar nombre de Usuario ó los 9 dígitos del No. de Cuenta UNAM">&#128100;</span>
+            <form method="POST">
+                <div class="campo">
+                    <label>Usuario y/o cuenta UNAM <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <input type="text" name="numero_cuenta" placeholder="Usuario" required autofocus>
+                        <span class="icon" title="Capturar nombre de Usuario ó los 9 dígitos del No. de Cuenta UNAM">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/></svg>
+                        </span>
+                    </div>
                 </div>
-            </div>
-            <div class="field">
-                <label>Contraseña: <span>*</span></label>
-                <div class="input-wrap">
-                    <input type="password" name="password" id="pwd" placeholder="**********" required>
-                    <span class="icon" onclick="togglePwd()" title="Mostrar / Ocultar contraseña">&#128065;</span>
+                <div class="campo">
+                    <label>Contraseña <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <input type="password" name="password" id="pwd" placeholder="••••••••••" required>
+                        <span class="icon" onclick="togglePwd()" title="Mostrar / Ocultar contraseña">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="captcha-box">
-                <p>Por favor valide el Captcha</p>
-                <div class="captcha-img-wrap">
-                    <img id="captcha-img" src="/captcha" width="200" height="70" alt="CAPTCHA">
-                    <button type="button" class="captcha-refresh" onclick="refrescarCaptcha()" title="Nuevo código">&#8635;</button>
+                <div class="captcha-box">
+                    <p>Por favor valide el CAPTCHA</p>
+                    <div class="captcha-img-wrap">
+                        <img id="captcha-img" src="/captcha" width="200" height="70" alt="CAPTCHA">
+                        <button type="button" class="captcha-refresh" onclick="refrescarCaptcha()" title="Nuevo código">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+                        </button>
+                    </div>
+                    <input type="text" name="captcha_input" class="captcha-input" placeholder="Escribe el código" required autocomplete="off">
                 </div>
-                <input type="text" name="captcha_input" class="captcha-input" placeholder="Escribe el código" required autocomplete="off">
+
+                <button type="submit" class="btn dorado">Ingresar</button>
+            </form>
+
+            <div class="auth-links">
+                <a href="/recuperar_contrasena">Recuperar contraseña</a>
+                <a href="/" class="volver">← Volver a la pantalla de inicio</a>
             </div>
-
-            <button type="submit" class="btn">Ingresar</button>
-        </form>
-
-        <div class="links">
-            <a href="/recuperar_contrasena">Recuperar contraseña</a>
-            <a href="/" class="volver">← Volver a la pantalla de inicio</a>
         </div>
     </div>
 

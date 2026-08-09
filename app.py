@@ -419,6 +419,19 @@ def logout():
     session.pop('usuario', None)
     return redirect(url_for('login'))
 
+@app.route('/recuperar_contrasena', methods=['GET', 'POST'])
+def recuperar_contrasena():
+    mensaje = None
+    error = None
+    if request.method == 'POST':
+        cuenta = request.form.get('cuenta', '').strip()
+        alumno = get_alumno(cuenta)
+        if alumno:
+            mensaje = f"Tu contraseña actual es: {alumno['password']}"
+        else:
+            error = "No se encontró ningún alumno con ese número de cuenta."
+    return render_template('recuperar_contrasena.html', mensaje=mensaje, error=error)
+
 @app.route('/test/<nombre_materia>')
 def test_materia(nombre_materia):
     if 'usuario' not in session: return redirect(url_for('login'))
@@ -643,6 +656,19 @@ def profesor_login():
 def profesor_logout():
     session.pop("profesor", None)
     return redirect(url_for("profesor_login"))
+
+@app.route('/profesor/recuperar_contrasena', methods=['GET', 'POST'])
+def profesor_recuperar_contrasena():
+    mensaje = None
+    error = None
+    if request.method == 'POST':
+        usuario = request.form.get('usuario', '').strip()
+        profesor = get_profesor(usuario)
+        if profesor:
+            mensaje = f"Tu contraseña actual es: {profesor['password']}"
+        else:
+            error = "No se encontró ningún profesor con ese usuario."
+    return render_template('recuperar_contrasena_prof.html', mensaje=mensaje, error=error)
 
 @app.route("/profesor/dashboard")
 def profesor_dashboard():

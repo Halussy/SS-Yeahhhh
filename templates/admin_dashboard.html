@@ -2,175 +2,138 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Panel Administrativo - ITSE</title>
+    <title>Panel administrativo - ITSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f5f6fa; }
+        .section-title{
+            font-size:15px; font-weight:600; color:var(--azul); margin-bottom:14px; padding-bottom:9px;
+            border-bottom:1px solid var(--linea); display:flex; align-items:center; gap:8px;
+        }
+        .section-title svg{ width:16px; height:16px; color:var(--senal-txt); }
 
-        /* Navbar */
-        .navbar { background: #1a5c38; padding: 14px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #27ae60; }
-        .navbar-title { color: #a8e6c1; font-size: 15px; font-weight: bold; letter-spacing: 0.5px; }
-        .navbar-right { display: flex; align-items: center; gap: 12px; }
-        .navbar-user { color: #ccc; font-size: 13px; }
-        .btn-logout { color: white; text-decoration: none; border: 1px solid rgba(255,255,255,0.4); padding: 6px 14px; border-radius: 4px; font-size: 13px; transition: 0.2s; }
-        .btn-logout:hover { background: #e74c3c; border-color: #e74c3c; }
+        .stats-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:14px; margin-bottom:30px; }
+        .stat-card{ padding:18px; text-align:center; border-top:3px solid var(--linea); }
+        .stat-card.azul{ border-top-color:var(--azul); }
+        .stat-card.verde{ border-top-color:var(--senal); }
+        .stat-card.dorado{ border-top-color:var(--dorado); }
+        .stat-card.gris{ border-top-color:var(--texto-mute); }
+        .stat-numero{ font-size:32px; font-weight:700; color:var(--tinta); line-height:1; font-family:var(--fuente-display); }
+        .stat-label{ font-size:12px; color:var(--texto-sec); margin-top:6px; }
 
-        .container { max-width: 1100px; margin: 35px auto; padding: 0 25px; }
-        .section-title { font-size: 17px; font-weight: bold; color: #002B5C; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #e0e0e0; display: flex; align-items: center; gap: 8px; }
+        .estilos-grid{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:30px; }
+        .estilo-pill{ background:var(--superficie); border:1px solid var(--linea); border-radius:var(--radio); padding:10px 16px; display:flex; align-items:center; gap:9px; }
+        .estilo-pill .conteo{ font-size:12px; color:var(--texto-sec); }
 
-        /* Tarjetas de estadísticas */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 35px; }
-        .stat-card { background: white; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.07); border-top: 4px solid #ccc; }
-        .stat-card.azul  { border-top-color: #002B5C; }
-        .stat-card.verde { border-top-color: #27ae60; }
-        .stat-card.dorado { border-top-color: #D4A12A; }
-        .stat-card.gris  { border-top-color: #7f8c8d; }
-        .stat-numero { font-size: 38px; font-weight: bold; color: #2c3e50; line-height: 1; }
-        .stat-label  { font-size: 13px; color: #888; margin-top: 6px; }
+        .two-col{ display:grid; grid-template-columns:1fr 320px; gap:22px; align-items:start; }
 
-        /* Estilos más frecuentes */
-        .estilos-grid { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 35px; }
-        .estilo-pill { background: white; border-radius: 8px; padding: 12px 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: center; gap: 10px; }
-        .estilo-pill .nombre { font-weight: bold; color: #333; text-transform: capitalize; font-size: 15px; }
-        .estilo-pill .conteo { font-size: 13px; color: #888; }
-        .badge-est { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
-        .badge-visual    { background: #1565c0; }
-        .badge-auditivo  { background: #6a1b9a; }
-        .badge-kinestesico { background: #2e7d32; }
-        .badge-analitico { background: #e65100; }
+        .alumno-card{ margin-bottom:16px; overflow:hidden; }
+        .alumno-header{ background:var(--azul); padding:10px 16px; display:flex; align-items:center; gap:10px; }
+        .avatar{
+            width:30px; height:30px; background:var(--dorado); border-radius:50%; display:flex;
+            align-items:center; justify-content:center; font-weight:600; color:var(--azul); font-size:13px; flex-shrink:0;
+        }
+        .alumno-nombre{ color:#fff; font-size:13px; font-weight:600; }
+        .alumno-meta{ color:rgba(255,255,255,0.65); font-size:11px; font-family:var(--fuente-mono); }
+        .rec-txt{ font-size:12px; color:var(--texto-sec); line-height:1.55; white-space:pre-line; max-width:240px; margin-top:4px; }
 
-        /* Panel de dos columnas: Alumnos + Formularios */
-        .two-col { display: grid; grid-template-columns: 1fr 340px; gap: 25px; align-items: start; }
+        .side-panel{ display:flex; flex-direction:column; gap:18px; }
+        .form-header.verde{ background:var(--senal); border-bottom-color:#1F7561; }
 
-        /* Tabla de alumnos */
-        .alumno-card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); margin-bottom: 20px; overflow: hidden; }
-        .alumno-header { background: #002B5C; padding: 11px 16px; display: flex; align-items: center; gap: 10px; }
-        .avatar { width: 34px; height: 34px; background: #D4A12A; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #002B5C; font-size: 14px; flex-shrink: 0; }
-        .alumno-nombre { color: white; font-size: 14px; font-weight: bold; }
-        .alumno-meta { color: #aac4e0; font-size: 11px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f0f4f8; color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 9px 14px; text-align: left; border-bottom: 1px solid #e8e8e8; }
-        td { padding: 11px 14px; border-bottom: 1px solid #f5f5f5; font-size: 13px; color: #333; vertical-align: top; }
-        tr:last-child td { border-bottom: none; }
-        .badge-estilo { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: bold; text-transform: capitalize; }
-        .badge-visual-t    { background: #e3f2fd; color: #0a3d6b; }
-        .badge-auditivo-t  { background: #f3e5f5; color: #4a1060; }
-        .badge-kinestesico-t { background: #e8f5e9; color: #1a5c22; }
-        .badge-analitico-t { background: #fff3e0; color: #7a3e00; }
-        .tag { display: inline-block; font-size: 10px; font-weight: bold; padding: 2px 7px; border-radius: 8px; }
-        .tag-ia  { background: #e3f2fd; color: #0a3d6b; }
-        .tag-fix { background: #e8f5e9; color: #1a5c22; }
-        .rec-txt { font-size: 12px; color: #666; line-height: 1.5; white-space: pre-line; max-width: 260px; margin-top: 4px; }
-
-        /* Vacío */
-        .empty-box { background: white; border-radius: 10px; padding: 40px; text-align: center; color: #aaa; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-
-        /* Panel lateral de formularios */
-        .side-panel { display: flex; flex-direction: column; gap: 20px; }
-        .form-card { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); overflow: hidden; }
-        .form-header { padding: 13px 18px; font-weight: bold; font-size: 14px; color: white; }
-        .form-header.alumno-h  { background: #002B5C; border-bottom: 3px solid #D4A12A; }
-        .form-header.profe-h   { background: #1a5c38; border-bottom: 3px solid #27ae60; }
-        .form-body { padding: 16px 18px; }
-        .form-body label { display: block; font-size: 12px; font-weight: bold; color: #555; margin-bottom: 4px; }
-        .form-body input, .form-body select { width: 100%; padding: 9px 11px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; margin-bottom: 12px; font-family: inherit; }
-        .form-body input:focus, .form-body select:focus { outline: none; border-color: #27ae60; }
-        .btn-agregar { width: 100%; padding: 10px; border: none; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-eliminar { background: none; border: none; color: #e74c3c; font-size: 13px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: 0.2s; font-weight: bold; }
-        .btn-eliminar:hover { background: #fdecea; }
-        .btn-eliminar:disabled { color: #ccc; cursor: not-allowed; }
-        .btn-alumno { background: #002B5C; color: white; }
-        .btn-alumno:hover { background: #001a38; }
-        .btn-profe  { background: #27ae60; color: white; }
-        .btn-profe:hover  { background: #1e8449; }
-
-        /* Lista de usuarios existentes */
-        .usuarios-lista { margin-top: 14px; border-top: 1px solid #f0f0f0; padding-top: 12px; }
-        .usuarios-lista p { font-size: 11px; font-weight: bold; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .usuario-item { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #555; padding: 5px 0; border-bottom: 1px solid #f8f8f8; }
-        .usuario-item:last-child { border-bottom: none; }
-        .usuario-item span { color: #aaa; font-size: 11px; }
+        .usuarios-lista{ margin-top:13px; border-top:1px solid var(--linea); padding-top:11px; }
+        .usuarios-lista p{ font-size:10px; font-weight:600; color:var(--texto-mute); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
+        .usuario-item{ display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--texto-sec); padding:5px 0; border-bottom:1px solid var(--fondo); }
+        .usuario-item:last-child{ border-bottom:none; }
+        .usuario-item span{ color:var(--texto-mute); font-size:11px; font-family:var(--fuente-mono); }
+        .btn-eliminar-icon{
+            background:none; border:none; color:var(--alerta); cursor:pointer; padding:3px 5px;
+            border-radius:4px; display:flex; align-items:center; transition:.15s;
+        }
+        .btn-eliminar-icon:hover{ background:var(--alerta-bg); }
+        .btn-eliminar-icon svg{ width:14px; height:14px; }
     </style>
 </head>
 <body>
 
-<div class="navbar">
-    <span class="navbar-title">️ Panel Administrativo — FESC Campo 4</span>
+<div class="top-navbar">
+    <h2>Panel administrativo · FES Cuautitlán Campo 4</h2>
     <div class="navbar-right">
-        <span class="navbar-user"> {{ admin }}</span>
-        <a href="/admin/logout" class="btn-logout">Cerrar Sesión</a>
+        <span>{{ admin }}</span>
+        <a href="/admin/logout" class="logout-btn">Cerrar sesión</a>
     </div>
 </div>
+{% from '_macros.html' import badge_estilo %}
 
-<div class="container">
+<div class="container ancho">
 
-    <!-- BOTÓN REPORTE -->
     <div style="display:flex; justify-content:flex-end; margin-bottom:18px;">
-        <a href="/admin/reporte" target="_blank"
-           style="background:#002B5C; color:#D4A12A; text-decoration:none; padding:11px 22px;
-                  border-radius:6px; font-size:14px; font-weight:bold; border:2px solid #D4A12A;
-                  transition:0.2s;"
-           onmouseover="this.style.background='#D4A12A';this.style.color='#002B5C';"
-           onmouseout="this.style.background='#002B5C';this.style.color='#D4A12A';">
-            Descargar Reporte PDF
+        <a href="/admin/reporte" target="_blank" class="btn-accion primario">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px;"><path d="M12 3v13m0 0l-4-4m4 4l4-4M4 20h16"/></svg>
+            Descargar reporte PDF
         </a>
     </div>
 
-    <!-- ESTADÍSTICAS -->
-    <div class="section-title"> Resumen general</div>
+    <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18M7 15l4-4 4 4 5-6"/></svg>
+        Resumen general
+    </div>
     <div class="stats-grid">
-        <div class="stat-card azul">
+        <div class="card stat-card azul">
             <div class="stat-numero">{{ total_alumnos }}</div>
             <div class="stat-label">Alumnos registrados</div>
         </div>
-        <div class="stat-card verde">
+        <div class="card stat-card verde">
             <div class="stat-numero">{{ total_profesores }}</div>
             <div class="stat-label">Profesores activos</div>
         </div>
-        <div class="stat-card dorado">
+        <div class="card stat-card dorado">
             <div class="stat-numero">{{ total_alumnos_evaluados }}</div>
             <div class="stat-label">Alumnos evaluados</div>
         </div>
-        <div class="stat-card gris">
+        <div class="card stat-card gris">
             <div class="stat-numero">{{ total_evaluaciones }}</div>
             <div class="stat-label">Evaluaciones totales</div>
         </div>
-        <div class="stat-card verde">
+        <div class="card stat-card verde">
             <div class="stat-numero">{{ total_correcciones }}</div>
             <div class="stat-label">Correcciones de profes</div>
         </div>
     </div>
 
-    <!-- ESTILOS MÁS FRECUENTES -->
     {% if estilos_stats %}
-    <div class="section-title"> Estilos de aprendizaje detectados</div>
-    <div class="estilos-grid" style="margin-bottom: 35px;">
+    <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/><circle cx="12" cy="12" r="4"/></svg>
+        Estilos de aprendizaje detectados
+    </div>
+    <div class="estilos-grid">
         {% for estilo, cnt in estilos_stats %}
         <div class="estilo-pill">
-            <span class="badge-est badge-{{ estilo }}"></span>
-            <span class="nombre">{{ estilo }}</span>
+            {{ badge_estilo(estilo) }}
             <span class="conteo">{{ cnt }} evaluación{{ 's' if cnt != 1 else '' }}</span>
         </div>
         {% endfor %}
     </div>
     {% endif %}
 
-    <!-- DOS COLUMNAS -->
     <div class="two-col">
 
-        <!-- COLUMNA IZQUIERDA: detalle de alumnos -->
         <div>
-            <div class="section-title"> Detalle por alumno</div>
+            <div class="section-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg>
+                Detalle por alumno
+            </div>
 
             {% set alumnos_list = alumnos | list %}
             {% if alumnos_list | length == 0 %}
-                <div class="empty-box">
-                    <div style="font-size: 36px; margin-bottom: 10px;"></div>
+                <div class="empty">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
                     <p>Aún no hay evaluaciones registradas.</p>
                 </div>
             {% else %}
                 {% for alumno in alumnos_list %}
-                <div class="alumno-card">
+                <div class="card alumno-card">
                     <div class="alumno-header">
                         <div class="avatar">{{ alumno.nombre[0] }}</div>
                         <div>
@@ -190,13 +153,13 @@
                             {% for ev in alumno.evaluaciones %}
                             <tr>
                                 <td><strong>{{ ev.materia }}</strong></td>
-                                <td><span class="badge-estilo badge-{{ ev.estilo }}-t">{{ ev.estilo }}</span></td>
+                                <td>{{ badge_estilo(ev.estilo) }}</td>
                                 <td>
                                     {% if ev.recomendacion_corregida %}
-                                        <span class="tag tag-fix">️ {{ ev.profesor_corrector }}</span>
+                                        <span class="tag tag-fix">{{ ev.profesor_corrector }}</span>
                                         <div class="rec-txt">{{ ev.recomendacion_corregida }}</div>
                                     {% else %}
-                                        <span class="tag tag-ia"> IA</span>
+                                        <span class="tag tag-ia">IA</span>
                                         <div class="rec-txt">{{ ev.recomendacion_ia }}</div>
                                     {% endif %}
                                 </td>
@@ -209,18 +172,16 @@
             {% endif %}
         </div>
 
-        <!-- COLUMNA DERECHA: formularios -->
         <div class="side-panel">
 
-            <!-- Agregar alumno -->
             <div class="form-card">
-                <div class="form-header alumno-h"> Agregar alumno</div>
+                <div class="form-header">Agregar alumno</div>
                 <div class="form-body">
                     <form method="POST" action="/admin/agregar_alumno">
                         <label>Número de cuenta</label>
-                        <input type="text" name="cuenta" placeholder="" required>
+                        <input type="text" name="cuenta" required>
                         <label>Nombre</label>
-                        <input type="text" name="nombre" placeholder="" required>
+                        <input type="text" name="nombre" required>
                         <label>Contraseña</label>
                         <input type="password" name="password" placeholder="••••••••" required>
                         <label>Semestre</label>
@@ -235,7 +196,7 @@
                             <option>7mo Semestre</option>
                             <option>8vo Semestre</option>
                         </select>
-                        <button type="submit" class="btn-agregar btn-alumno">+ Agregar alumno</button>
+                        <button type="submit" class="btn-accion primario" style="width:100%; justify-content:center;">+ Agregar alumno</button>
                     </form>
                     <div class="usuarios-lista">
                         <p>Alumnos registrados</p>
@@ -246,7 +207,9 @@
                                 <span>{{ cuenta }}</span>
                                 <form method="POST" action="/admin/eliminar_alumno" onsubmit="return confirm('¿Eliminar a {{ datos.nombre }}?')">
                                     <input type="hidden" name="cuenta" value="{{ cuenta }}">
-                                    <button type="submit" class="btn-eliminar" title="Eliminar alumno"></button>
+                                    <button type="submit" class="btn-eliminar-icon" title="Eliminar alumno">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -255,18 +218,17 @@
                 </div>
             </div>
 
-            <!-- Agregar profesor -->
             <div class="form-card">
-                <div class="form-header profe-h"> Agregar profesor</div>
+                <div class="form-header verde">Agregar profesor</div>
                 <div class="form-body">
                     <form method="POST" action="/admin/agregar_profesor">
                         <label>Usuario</label>
-                        <input type="text" name="usuario" placeholder="" required>
+                        <input type="text" name="usuario" required>
                         <label>Nombre completo</label>
-                        <input type="text" name="nombre" placeholder="" required>
+                        <input type="text" name="nombre" required>
                         <label>Contraseña</label>
                         <input type="password" name="password" placeholder="••••••••" required>
-                        <button type="submit" class="btn-agregar btn-profe">+ Agregar profesor</button>
+                        <button type="submit" class="btn-accion exito" style="width:100%; justify-content:center;">+ Agregar profesor</button>
                     </form>
                     <div class="usuarios-lista">
                         <p>Profesores registrados</p>
@@ -277,7 +239,9 @@
                                 <span>{{ usuario }}</span>
                                 <form method="POST" action="/admin/eliminar_profesor" onsubmit="return confirm('¿Eliminar a {{ datos.nombre }}?')">
                                     <input type="hidden" name="usuario" value="{{ usuario }}">
-                                    <button type="submit" class="btn-eliminar" title="Eliminar profesor"></button>
+                                    <button type="submit" class="btn-eliminar-icon" title="Eliminar profesor">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>
+                                    </button>
                                 </form>
                             </div>
                         </div>
