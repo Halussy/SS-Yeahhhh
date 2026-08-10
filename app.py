@@ -1357,7 +1357,7 @@ def admin_reporte():
         Spacer(1, 16),
         hr(DORADO, 1),
         Paragraph(
-            f"Documento generado automaticamente — Sistema de Estilos de Aprendizaje — FESC Campo 4 — {fecha_reporte}",
+            f"Documento generado automaticamente — Sistema de Estilos de Aprendizaje — Facultad de Estudios Superiores Campo 4 — {fecha_reporte}",
             s_pie),
     ]
 
