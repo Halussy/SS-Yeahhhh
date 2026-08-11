@@ -16,13 +16,14 @@
         <div class="auth-box">
             <img src="/static/Logo UNAM.png" alt="Logo UNAM" class="logo">
             <h2>Portal de Evaluación</h2>
-            <p class="subt">Ingeniería en Telecomunicaciones, Sistemas y Electrónica</p>
+            <p class="subt">Portal de Estilos de Aprendizaje · FES Cuautitlán</p>
 
             {% if error %}
                 <div class="mensaje-error">{{ error }}</div>
             {% endif %}
 
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="campo">
                     <label>Usuario y/o cuenta UNAM <span class="req">*</span></label>
                     <div class="input-wrap">

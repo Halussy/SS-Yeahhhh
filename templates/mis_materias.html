@@ -31,12 +31,12 @@
 </head>
 <body>
     <div class="top-navbar">
-        <h2>Facultad de Estudios Superiores - Campo 4</h2>
+        <h2>Facultad de Estudios Superiores Cuautitlán - Campo 4</h2>
         <a href="/logout" class="logout-btn">Cerrar sesión</a>
     </div>
     <div class="tabs-container">
-        <a href="/inicio" class="tab-link">Inicio (Recomendaciones IA)</a>
-        <a href="/mis_materias" class="tab-link active">Mis Materias (Test)</a>
+        <a href="/inicio" class="tab-link">Inicio</a>
+        <a href="/mis_materias" class="tab-link active">Materias Inscritas</a>
         <a href="/materias" class="tab-link">Plan de Estudios</a>
         <a href="/mis_actividades" class="tab-link">Actividades y Tareas</a>
     </div>
@@ -134,6 +134,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}',
                 },
                 body: JSON.stringify({ message: mensaje }),
             });

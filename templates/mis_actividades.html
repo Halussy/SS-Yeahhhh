@@ -56,12 +56,12 @@
 </head>
 <body>
     <div class="top-navbar">
-        <h2>Facultad de Estudios Superiores Cuautitlán · Campo 4</h2>
+        <h2>Facultad de Estudios Superiores Cuautitlán - Campo 4</h2>
         <a href="/logout" class="logout-btn">Cerrar sesión</a>
     </div>
     <div class="tabs-container">
-        <a href="/inicio" class="tab-link">Inicio (Recomendaciones IA)</a>
-        <a href="/mis_materias" class="tab-link">Mis Materias (Test)</a>
+        <a href="/inicio" class="tab-link">Inicio</a>
+        <a href="/mis_materias" class="tab-link">Materias Inscritas</a>
         <a href="/materias" class="tab-link">Plan de Estudios</a>
         <a href="/mis_actividades" class="tab-link active">Actividades y Tareas</a>
     </div>
@@ -150,6 +150,7 @@
                                 <details class="detalle-reentrega">
                                     <summary>Reemplazar entrega</summary>
                                     <form method="POST" action="/entregar_tarea/{{ tarea.id }}" enctype="multipart/form-data" class="entrega-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <label>Archivo</label>
                                         <input type="file" name="archivo_entrega" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.zip">
                                         <label>Comentario (opcional)</label>
@@ -159,6 +160,7 @@
                                 </details>
                             {% else %}
                                 <form method="POST" action="/entregar_tarea/{{ tarea.id }}" enctype="multipart/form-data" class="entrega-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <label>Entregar tarea</label>
                                     <input type="file" name="archivo_entrega" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.zip">
                                     <label>Comentario (opcional)</label>

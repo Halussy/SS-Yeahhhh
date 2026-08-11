@@ -60,14 +60,15 @@
         <a href="/logout" class="logout-btn">Cerrar sesión</a>
     </div>
     <div class="tabs-container">
-        <a href="/inicio" class="tab-link">Inicio (Recomendaciones IA)</a>
-        <a href="/mis_materias" class="tab-link">Mis Materias (Test)</a>
+        <a href="/inicio" class="tab-link">Inicio</a>
+        <a href="/mis_materias" class="tab-link">Materias Inscritas</a>
         <a href="/materias" class="tab-link active">Plan de Estudios</a>
         <a href="/mis_actividades" class="tab-link">Actividades y Tareas</a>
     </div>
 
     <div class="container">
         <form action="/guardar_materias" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="card filtro-semestre">
                 <label>Ir al semestre:</label>
@@ -214,6 +215,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}',
                 },
                 body: JSON.stringify({ message: mensaje }),
             });

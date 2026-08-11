@@ -27,8 +27,6 @@
         .estilo-pill{ background:var(--superficie); border:1px solid var(--linea); border-radius:var(--radio); padding:10px 16px; display:flex; align-items:center; gap:9px; }
         .estilo-pill .conteo{ font-size:12px; color:var(--texto-sec); }
 
-        .two-col{ display:grid; grid-template-columns:1fr 320px; gap:22px; align-items:start; }
-
         .alumno-card{ margin-bottom:16px; overflow:hidden; }
         .alumno-header{ background:var(--azul); padding:10px 16px; display:flex; align-items:center; gap:10px; }
         .avatar{
@@ -38,21 +36,6 @@
         .alumno-nombre{ color:#fff; font-size:13px; font-weight:600; }
         .alumno-meta{ color:rgba(255,255,255,0.65); font-size:11px; font-family:var(--fuente-mono); }
         .rec-txt{ font-size:12px; color:var(--texto-sec); line-height:1.55; white-space:pre-line; max-width:240px; margin-top:4px; }
-
-        .side-panel{ display:flex; flex-direction:column; gap:18px; }
-        .form-header.verde{ background:var(--senal); border-bottom-color:#1F7561; }
-
-        .usuarios-lista{ margin-top:13px; border-top:1px solid var(--linea); padding-top:11px; }
-        .usuarios-lista p{ font-size:10px; font-weight:600; color:var(--texto-mute); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
-        .usuario-item{ display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--texto-sec); padding:5px 0; border-bottom:1px solid var(--fondo); }
-        .usuario-item:last-child{ border-bottom:none; }
-        .usuario-item span{ color:var(--texto-mute); font-size:11px; font-family:var(--fuente-mono); }
-        .btn-eliminar-icon{
-            background:none; border:none; color:var(--alerta); cursor:pointer; padding:3px 5px;
-            border-radius:4px; display:flex; align-items:center; transition:.15s;
-        }
-        .btn-eliminar-icon:hover{ background:var(--alerta-bg); }
-        .btn-eliminar-icon svg{ width:14px; height:14px; }
     </style>
 </head>
 <body>
@@ -63,6 +46,12 @@
         <span>{{ admin }}</span>
         <a href="/admin/logout" class="logout-btn">Cerrar sesión</a>
     </div>
+</div>
+<div class="tabs-container">
+    <a href="/admin/dashboard" class="tab-link active">Resumen y evaluaciones</a>
+    <a href="/admin/alumnos" class="tab-link">Alumnos</a>
+    <a href="/admin/profesores" class="tab-link">Docentes</a>
+    <a href="/admin/administradores" class="tab-link">Administradores</a>
 </div>
 {% from '_macros.html' import badge_estilo %}
 
@@ -117,141 +106,56 @@
     </div>
     {% endif %}
 
-    <div class="two-col">
-
-        <div>
-            <div class="section-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg>
-                Detalle por alumno
-            </div>
-
-            {% set alumnos_list = alumnos | list %}
-            {% if alumnos_list | length == 0 %}
-                <div class="empty">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-                    <p>Aún no hay evaluaciones registradas.</p>
-                </div>
-            {% else %}
-                {% for alumno in alumnos_list %}
-                <div class="card alumno-card">
-                    <div class="alumno-header">
-                        <div class="avatar">{{ alumno.nombre[0] }}</div>
-                        <div>
-                            <div class="alumno-nombre">{{ alumno.nombre }}</div>
-                            <div class="alumno-meta">{{ alumno.cuenta }} · {{ alumno.semestre }}</div>
-                        </div>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Materia</th>
-                                <th>Estilo</th>
-                                <th>Recomendación activa</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for ev in alumno.evaluaciones %}
-                            <tr>
-                                <td><strong>{{ ev.materia }}</strong></td>
-                                <td>{{ badge_estilo(ev.estilo) }}</td>
-                                <td>
-                                    {% if ev.recomendacion_corregida %}
-                                        <span class="tag tag-fix">{{ ev.profesor_corrector }}</span>
-                                        <div class="rec-txt">{{ ev.recomendacion_corregida }}</div>
-                                    {% else %}
-                                        <span class="tag tag-ia">IA</span>
-                                        <div class="rec-txt">{{ ev.recomendacion_ia }}</div>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% endfor %}
-            {% endif %}
-        </div>
-
-        <div class="side-panel">
-
-            <div class="form-card">
-                <div class="form-header">Agregar alumno</div>
-                <div class="form-body">
-                    <form method="POST" action="/admin/agregar_alumno">
-                        <label>Número de cuenta</label>
-                        <input type="text" name="cuenta" required>
-                        <label>Nombre</label>
-                        <input type="text" name="nombre" required>
-                        <label>Contraseña</label>
-                        <input type="password" name="password" placeholder="••••••••" required>
-                        <label>Semestre</label>
-                        <select name="semestre" required>
-                            <option value="">Seleccionar...</option>
-                            <option>1er Semestre</option>
-                            <option>2do Semestre</option>
-                            <option>3er Semestre</option>
-                            <option>4to Semestre</option>
-                            <option>5to Semestre</option>
-                            <option>6to Semestre</option>
-                            <option>7mo Semestre</option>
-                            <option>8vo Semestre</option>
-                        </select>
-                        <button type="submit" class="btn-accion primario" style="width:100%; justify-content:center;">+ Agregar alumno</button>
-                    </form>
-                    <div class="usuarios-lista">
-                        <p>Alumnos registrados</p>
-                        {% for cuenta, datos in base_alumnos.items() %}
-                        <div class="usuario-item">
-                            <strong>{{ datos.nombre }}</strong>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span>{{ cuenta }}</span>
-                                <form method="POST" action="/admin/eliminar_alumno" onsubmit="return confirm('¿Eliminar a {{ datos.nombre }}?')">
-                                    <input type="hidden" name="cuenta" value="{{ cuenta }}">
-                                    <button type="submit" class="btn-eliminar-icon" title="Eliminar alumno">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-card">
-                <div class="form-header verde">Agregar profesor</div>
-                <div class="form-body">
-                    <form method="POST" action="/admin/agregar_profesor">
-                        <label>Usuario</label>
-                        <input type="text" name="usuario" required>
-                        <label>Nombre completo</label>
-                        <input type="text" name="nombre" required>
-                        <label>Contraseña</label>
-                        <input type="password" name="password" placeholder="••••••••" required>
-                        <button type="submit" class="btn-accion exito" style="width:100%; justify-content:center;">+ Agregar profesor</button>
-                    </form>
-                    <div class="usuarios-lista">
-                        <p>Profesores registrados</p>
-                        {% for usuario, datos in profesores.items() %}
-                        <div class="usuario-item">
-                            <strong>{{ datos.nombre }}</strong>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span>{{ usuario }}</span>
-                                <form method="POST" action="/admin/eliminar_profesor" onsubmit="return confirm('¿Eliminar a {{ datos.nombre }}?')">
-                                    <input type="hidden" name="usuario" value="{{ usuario }}">
-                                    <button type="submit" class="btn-eliminar-icon" title="Eliminar profesor">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-
-        </div>
+    <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/></svg>
+        Detalle por alumno
     </div>
+
+    {% set alumnos_list = alumnos | list %}
+    {% if alumnos_list | length == 0 %}
+        <div class="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            <p>Aún no hay evaluaciones registradas.</p>
+        </div>
+    {% else %}
+        {% for alumno in alumnos_list %}
+        <div class="card alumno-card">
+            <div class="alumno-header">
+                <div class="avatar">{{ alumno.nombre[0] }}</div>
+                <div>
+                    <div class="alumno-nombre">{{ alumno.nombre }}</div>
+                    <div class="alumno-meta">{{ alumno.cuenta }} · {{ alumno.carrera }}</div>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Materia</th>
+                        <th>Estilo</th>
+                        <th>Recomendación activa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ev in alumno.evaluaciones %}
+                    <tr>
+                        <td><strong>{{ ev.materia }}</strong></td>
+                        <td>{{ badge_estilo(ev.estilo) }}</td>
+                        <td>
+                            {% if ev.recomendacion_corregida %}
+                                <span class="tag tag-fix">{{ ev.profesor_corrector }}</span>
+                                <div class="rec-txt">{{ ev.recomendacion_corregida }}</div>
+                            {% else %}
+                                <span class="tag tag-ia">IA</span>
+                                <div class="rec-txt">{{ ev.recomendacion_ia }}</div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+    {% endif %}
 </div>
 
 </body>

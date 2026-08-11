@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Cambiar contraseña - ITSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root{ --auth-bg: url('/static/biblioteca.jpg'); }
+    </style>
+</head>
+<body>
+    <div class="auth-shell">
+        <div class="auth-box">
+            <img src="/static/Logo UNAM.png" alt="Logo UNAM" class="logo">
+            <h2>Cambiar contraseña</h2>
+            {% if era_temporal %}
+                <p class="subt">Iniciaste sesión con una contraseña temporal. Elige una nueva para tu cuenta.</p>
+            {% else %}
+                <p class="subt">Elige una nueva contraseña para tu cuenta</p>
+            {% endif %}
+
+            {% if error %}
+                <div class="mensaje-error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="campo">
+                    <label>Contraseña actual <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <input type="password" name="password_actual" id="pwd1" placeholder="••••••••••" required autofocus>
+                        <span class="icon" onclick="togglePwd('pwd1')" title="Mostrar / Ocultar contraseña">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </span>
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Nueva contraseña <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <input type="password" name="password_nueva" id="pwd2" placeholder="Mínimo 6 caracteres" required minlength="6">
+                        <span class="icon" onclick="togglePwd('pwd2')" title="Mostrar / Ocultar contraseña">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </span>
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Confirmar nueva contraseña <span class="req">*</span></label>
+                    <div class="input-wrap">
+                        <input type="password" name="password_confirmar" id="pwd3" placeholder="Repite la nueva contraseña" required minlength="6">
+                        <span class="icon" onclick="togglePwd('pwd3')" title="Mostrar / Ocultar contraseña">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </span>
+                    </div>
+                </div>
+                <button type="submit" class="btn dorado">Guardar nueva contraseña</button>
+            </form>
+
+            {% if not era_temporal %}
+            <div class="auth-links">
+                <a href="/inicio" class="volver">← Volver al inicio</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function togglePwd(id) {
+            const f = document.getElementById(id);
+            f.type = f.type === 'password' ? 'text' : 'password';
+        }
+    </script>
+</body>
+</html>

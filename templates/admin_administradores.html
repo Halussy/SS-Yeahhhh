@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Administradores - ITSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .form-cards{ display:flex; flex-direction:column; gap:18px; max-width:520px; }
+        .form-header.dorado{ background:var(--dorado); color:var(--azul); border-bottom-color:#b3903c; }
+
+        .usuarios-lista{ margin-top:13px; border-top:1px solid var(--linea); padding-top:11px; }
+        .usuarios-lista p{ font-size:10px; font-weight:600; color:var(--texto-mute); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
+        .usuario-item{ display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--texto-sec); padding:5px 0; border-bottom:1px solid var(--fondo); }
+        .usuario-item:last-child{ border-bottom:none; }
+        .usuario-item span{ color:var(--texto-mute); font-size:11px; font-family:var(--fuente-mono); }
+        .tag-tu{
+            font-size:10px; font-weight:600; color:var(--senal-txt); background:var(--fondo);
+            padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:0.04em;
+        }
+        .btn-eliminar-icon{
+            background:none; border:none; color:var(--alerta); cursor:pointer; padding:3px 5px;
+            border-radius:4px; display:flex; align-items:center; transition:.15s;
+        }
+        .btn-eliminar-icon:hover{ background:var(--alerta-bg); }
+        .btn-eliminar-icon svg{ width:14px; height:14px; }
+    </style>
+</head>
+<body>
+
+<div class="top-navbar">
+    <h2>Panel administrativo · FES Cuautitlán Campo 4</h2>
+    <div class="navbar-right">
+        <span>{{ admin }}</span>
+        <a href="/admin/logout" class="logout-btn">Cerrar sesión</a>
+    </div>
+</div>
+<div class="tabs-container">
+    <a href="/admin/dashboard" class="tab-link">Resumen y evaluaciones</a>
+    <a href="/admin/alumnos" class="tab-link">Alumnos</a>
+    <a href="/admin/profesores" class="tab-link">Docentes</a>
+    <a href="/admin/administradores" class="tab-link active">Administradores</a>
+</div>
+
+<div class="container ancho">
+
+    <div class="form-cards">
+
+        <div class="form-card">
+            <div class="form-header dorado">Agregar administrador</div>
+            <div class="form-body">
+                <form method="POST" action="/admin/agregar_admin">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label>Usuario</label>
+                    <input type="text" name="usuario" required>
+                    <label>Nombre completo</label>
+                    <input type="text" name="nombre" required>
+                    <label>Contraseña</label>
+                    <input type="password" name="password" placeholder="••••••••" required>
+                    <button type="submit" class="btn-accion primario" style="width:100%; justify-content:center;">+ Agregar administrador</button>
+                </form>
+                <div class="usuarios-lista">
+                    <p>Administradores registrados</p>
+                    {% for usuario, datos in admins.items() %}
+                    <div class="usuario-item">
+                        <strong>{{ datos.nombre }}</strong>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span>{{ usuario }}</span>
+                            {% if usuario == admin_activo %}
+                                <span class="tag-tu">Tú</span>
+                            {% else %}
+                                <form method="POST" action="/admin/eliminar_admin" onsubmit="return confirm('¿Eliminar a {{ datos.nombre }}?')">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="usuario" value="{{ usuario }}">
+                                    <button type="submit" class="btn-eliminar-icon" title="Eliminar administrador">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

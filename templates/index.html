@@ -43,6 +43,7 @@
             </div>
         </div>
         <form action="/evaluar" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="materia_oculta" value="{{ materia }}">
 
             {% for pregunta in lista_preguntas %}

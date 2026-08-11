@@ -152,6 +152,7 @@
                                         {% endif %}
                                         </div>
                                         <form method="POST" action="/profesor/calificar_entrega" class="calif-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" name="entrega_id" value="{{ entrega.id }}">
                                             <input type="text" name="calificacion" placeholder="Calif." value="{{ entrega.calificacion or '' }}" required>
                                             <textarea name="retroalimentacion" placeholder="Retroalimentación...">{{ entrega.retroalimentacion or '' }}</textarea>
@@ -179,6 +180,7 @@
                     <div class="form-header">Asignar nueva tarea</div>
                     <div class="form-body">
                         <form method="POST" action="/profesor/asignar_tarea" enctype="multipart/form-data">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <label>Alumno</label>
                             <select name="cuenta" required>
                                 <option value="">Seleccionar alumno...</option>
@@ -223,6 +225,7 @@
                 <button class="modal-x" onclick="cerrarModal()">&times;</button>
             </div>
             <form method="POST" action="/profesor/corregir_actividad">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="actividad_id" id="modal_id">
                 <div class="modal-body">
                     <div class="modal-info">

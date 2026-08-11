@@ -78,6 +78,15 @@ img{ max-width:100%; }
 }
 .logout-btn:hover, .btn-logout:hover{ background:rgba(226,90,90,0.15); border-color:#E25A5A; color:#fff; }
 
+.nav-actions{ display:flex; align-items:center; gap:10px; }
+.cambiar-pwd-btn{
+  color:#fff; text-decoration:none; padding:7px 14px;
+  border:1px solid rgba(255,255,255,0.3); border-radius:6px;
+  font-size:13px; font-weight:500; transition:.15s;
+  background:transparent; cursor:pointer; font-family:var(--fuente-cuerpo);
+}
+.cambiar-pwd-btn:hover{ background:rgba(212,161,42,0.15); border-color:var(--dorado); }
+
 .navbar-right{ display:flex; align-items:center; gap:14px; }
 .navbar-right span{ color:rgba(255,255,255,0.65); font-size:13px; }
 

@@ -27,11 +27,14 @@
 <body>
     <div class="top-navbar">
         <h2>Facultad de Estudios Superiores Cuautitlán - Campo 4</h2>
-        <a href="/logout" class="logout-btn">Cerrar sesión</a>
+        <div class="nav-actions">
+            <a href="/cambiar_contrasena" class="cambiar-pwd-btn">Cambiar contraseña</a>
+            <a href="/logout" class="logout-btn">Cerrar sesión</a>
+        </div>
     </div>
     <div class="tabs-container">
-        <a href="/inicio" class="tab-link active">Inicio (Recomendaciones IA)</a>
-        <a href="/mis_materias" class="tab-link">Mis Materias (Test)</a>
+        <a href="/inicio" class="tab-link active">Inicio</a>
+        <a href="/mis_materias" class="tab-link">Materias Inscritas</a>
         <a href="/materias" class="tab-link">Plan de Estudios</a>
         <a href="/mis_actividades" class="tab-link">Actividades y Tareas</a>
     </div>
@@ -39,7 +42,7 @@
     <div class="container">
         <div class="card welcome-banner">
             <h2>Bienvenido a tu panel, {{ alumno.nombre }}</h2>
-            <p>{{ alumno.semestre }} · Ing. en Telecomunicaciones, Sistemas y Electrónica</p>
+            <p>{{ alumno.carrera_nombre }}</p>
         </div>
 
         <div class="seccion-titulo">
@@ -123,6 +126,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}',
                 },
                 body: JSON.stringify({ message: mensaje }),
             });

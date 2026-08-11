@@ -1,5 +1,8 @@
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify, send_from_directory, send_file
+from flask_wtf import CSRFProtect
+from flask_wtf.csrf import CSRFError
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 from Estilos_Apren import EvaluadorEstilosAprendizaje
 import sqlite3
 from datetime import timedelta
@@ -7,9 +10,27 @@ import google.genai as genai
 import os
 import io
 import random
+import secrets
 import string
 from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFont
+
+# Se importan aquí (en vez de dentro de admin_reporte) para que la construcción del
+# cache de fuentes de Matplotlib ocurra una sola vez al arrancar el servidor, no en
+# la primera petición al reporte (donde puede tardar hasta ~1 minuto y parecer que
+# la app se colgó).
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import numpy as np
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Table,
+                                TableStyle, HRFlowable, PageBreak,
+                                Image as RLImage, KeepTogether)
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 
 load_dotenv()
 
@@ -27,15 +48,32 @@ def estilo_clase(nombre_estilo):
     """Mapea el nombre de un estilo de aprendizaje a su clase CSS (badge-<clase>).
     Filtro de plantilla puro: no lee ni escribe estado, no afecta ninguna ruta."""
     return _ESTILO_A_CLASE.get(nombre_estilo, 'visual')
-app.secret_key = 'clave_secreta_servicio_social'
+clave_secreta_env = os.getenv("SECRET_KEY")
+if not clave_secreta_env:
+    clave_secreta_env = secrets.token_hex(32)
+    print("ADVERTENCIA: SECRET_KEY no configurada en .env — usando una clave temporal generada en este arranque "
+          "(las sesiones se invalidarán al reiniciar el servidor). Define SECRET_KEY en tu .env para producción.")
+app.secret_key = clave_secreta_env
+
+csrf = CSRFProtect(app)
+
 UPLOAD_FOLDER = 'uploads_tareas'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB por subida
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'txt', 'zip'}
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS 
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 app.permanent_session_lifetime = timedelta(minutes=10)
+
+@app.errorhandler(413)
+def archivo_demasiado_grande(e):
+    return "El archivo supera el límite permitido de 10 MB. Vuelve a la página anterior e inténtalo con un archivo más pequeño.", 413
+
+@app.errorhandler(CSRFError)
+def token_csrf_invalido(e):
+    return "Tu formulario expiró o la sesión venció. Vuelve a la página anterior, recarga e inténtalo de nuevo.", 400
 
 api_key_secreta = os.getenv("GEMINI_API_KEY")
 cliente_ia = genai.Client(api_key=api_key_secreta)
@@ -45,151 +83,341 @@ mi_evaluador = EvaluadorEstilosAprendizaje()
 BASE_DE_DATOS = {
     "320001512": {
         "password": "123",
-        "nombre": "Ricardo",
-        "semestre": "8vo Semestre"
-    },
-    "423057353": {
-        "password": "789",
-        "nombre": "Armando Contreras Juarez",
-        "semestre": "1er Semestre"
+        "nombre": "Ricardo Luevano Mote",
+        "carrera": "ITSE"
     }
 }
 
-PLAN_DE_ESTUDIOS = {
-    "1er Semestre": [
-        {"nombre": "Álgebra", "creditos": 10},
-        {"nombre": "Cálculo Diferencial e Integral", "creditos": 8},
-        {"nombre": "Geometría Analítica", "creditos": 8},
-        {"nombre": "Simulación de Sistemas", "creditos": 8},
-        {"nombre": "Algoritmos y Programación Estructurada", "creditos": 8},
-        {"nombre": "Comunicación Oral y Escrita", "creditos": 6}
-    ],
-    "2do Semestre": [
-        {"nombre": "Ética Profesional", "creditos": 6},
-        {"nombre": "Cálculo Vectorial", "creditos": 10},
-        {"nombre": "Estática", "creditos": 8},
-        {"nombre": "Estructura de Datos", "creditos": 8},
-        {"nombre": "Sistemas Operativos", "creditos": 8},
-        {"nombre": "Transformadas Especiales", "creditos": 8},
-        {"nombre": "Introducción al desarrollo sustentable", "creditos": 0}
-    ],
-    "3er Semestre": [
-        {"nombre": "Electricidad y Magnetismo", "creditos": 10},
-        {"nombre": "Cinemática y Dinámica", "creditos": 10},
-        {"nombre": "Ingeniería de Software", "creditos": 8},
-        {"nombre": "Neumática e Hidráulica", "creditos": 8},
-        {"nombre": "Ecuaciones Diferenciales y en Diferencias", "creditos": 10},
-        {"nombre": "Género, igualdad y cultura de paz", "creditos": 0}
-    ],
-    "4to Semestre": [
-        {"nombre": "Fundamentos de Termodinámica", "creditos": 8},
-        {"nombre": "Óptica y Acústica", "creditos": 10},
-        {"nombre": "Comercialización en Tecnologías de Información", "creditos": 6},
-        {"nombre": "Automatización y Electrónica", "creditos": 8},
-        {"nombre": "Aspectos Básicos en el Desarrollo Empresarial", "creditos": 8},
-        {"nombre": "Análisis de Sistemas y Señales", "creditos": 8},
-        {"nombre": "Circuitos Eléctricos", "creditos": 10}
-    ],
-    "5to Semestre": [
-        {"nombre": "Bases de Datos", "creditos": 8},
-        {"nombre": "Probabilidad y Estadística", "creditos": 8},
-        {"nombre": "Dispositivos y Circuitos Electrónicos", "creditos": 10},
-        {"nombre": "Sistemas Digitales", "creditos": 10},
-        {"nombre": "Teoría Electromagnética", "creditos": 10}
-    ],
-    "6to Semestre": [
-        {"nombre": "Sistemas Analógicos", "creditos": 8},
-        {"nombre": "Fundamentos de Sistemas de Comunicaciones", "creditos": 10},
-        {"nombre": "Amplificación de Señales", "creditos": 10},
-        {"nombre": "Ingeniería de Control", "creditos": 10},
-        {"nombre": "Máquinas Eléctricas", "creditos": 10}
-    ],
-    "7mo Semestre": [
-        {"nombre": "Sistemas de Datos Muestreados", "creditos": 8},
-        {"nombre": "Microprocesadores", "creditos": 10},
-        {"nombre": "Comunicaciones Digitales", "creditos": 10},
-        {"nombre": "Electrónica Analógica", "creditos": 10},
-        {"nombre": "Telefonía Digital", "creditos": 8}
-    ],
-    "8vo Semestre": [
-        {"nombre": "Control Digital", "creditos": 10},
-        {"nombre": "Microcontroladores", "creditos": 8},
-        {"nombre": "Transmisión de Datos", "creditos": 8},
-        {"nombre": "Dispositivos Lógicos Programables", "creditos": 8},
-        {"nombre": "Sistemas de Audio y Video", "creditos": 8}
-    ],
-    "9no Semestre - Módulo: Comunicaciones": [
-        {"nombre": "Sistemas de Comunicaciones Ópticos", "creditos": 8},
-        {"nombre": "Antenas", "creditos": 8},
-        {"nombre": "Microondas y Satélites", "creditos": 8}
-    ],
-    "9no Semestre - Módulo: Ingeniería de Control y Mecatrónica": [
-        {"nombre": "Control Avanzado", "creditos": 8},
-        {"nombre": "Autómatas Programables", "creditos": 8},
-        {"nombre": "Robótica", "creditos": 8}
-    ],
-    "9no Semestre - Módulo: Sistemas Analógicos": [
-        {"nombre": "Electrónica de Potencia", "creditos": 8},
-        {"nombre": "Instrumentación Electrónica", "creditos": 8},
-        {"nombre": "Sistemas Microelectrónicos Avanzados", "creditos": 8}
-    ],
-    "9no Semestre - Módulo: Sistemas de Información": [
-        {"nombre": "Análisis de Redes de Datos", "creditos": 8},
-        {"nombre": "Bases de Datos Avanzadas", "creditos": 8},
-        {"nombre": "Desarrollo de Proyectos de Software", "creditos": 8}
-    ],
-    "9no Semestre - Módulo: Sistemas Digitales": [
-        {"nombre": "Diseño de Sistemas Digitales", "creditos": 8},
-        {"nombre": "Sistemas Basados en Redes Neuronales", "creditos": 8},
-        {"nombre": "Sistemas Inteligentes", "creditos": 8}
-    ],
-    "Optativas de Elección": [
-        {"nombre": "Control de Sistemas Difusos", "creditos": 8},
-        {"nombre": "Bases de Datos Especiales", "creditos": 8},
-        {"nombre": "Cableado Estructurado", "creditos": 8},
-        {"nombre": "Compresión de Datos", "creditos": 8},
-        {"nombre": "Control Adaptable", "creditos": 8},
-        {"nombre": "Diseño de Sistemas de Comunicaciones", "creditos": 8},
-        {"nombre": "Control de Sistemas No Lineales", "creditos": 8},
-        {"nombre": "Control Difuso", "creditos": 8},
-        {"nombre": "Control Estocástico", "creditos": 8},
-        {"nombre": "Diseño de Interfaces de Usuario", "creditos": 8},
-        {"nombre": "Dispositivos y Circuitos de Radiofrecuencia (RF)", "creditos": 8},
-        {"nombre": "Diseño de Sistemas de Información", "creditos": 8},
-        {"nombre": "Diseño de Sistemas Digitales Avanzados", "creditos": 8},
-        {"nombre": "Dispositivos Electrónicos Especiales", "creditos": 8},
-        {"nombre": "Dispositivos y Circuitos para Microondas", "creditos": 8},
-        {"nombre": "Seguridad en Sistemas de Información", "creditos": 8},
-        {"nombre": "Domótica", "creditos": 8},
-        {"nombre": "Instrumentación Electrónica Avanzada", "creditos": 8},
-        {"nombre": "Minería de Datos", "creditos": 8},
-        {"nombre": "Procesamiento Digital de Señales", "creditos": 8},
-        {"nombre": "Sistemas Expertos", "creditos": 8},
-        {"nombre": "Sistemas Basados en Algoritmos Genéticos", "creditos": 8},
-        {"nombre": "Sistemas de Automatización y Robótica", "creditos": 8},
-        {"nombre": "Sistemas de Comunicación Inalámbricos Móviles", "creditos": 8},
-        {"nombre": "Sistemas de Comunicaciones Multimedia", "creditos": 8},
-        {"nombre": "Telemática", "creditos": 8},
-        {"nombre": "Técnicas de Recuperación de Información", "creditos": 8},
-        {"nombre": "Diseño de Aplicaciones para Dispositivos Móviles con Java", "creditos": 8}
-    ]
+# Carreras ofertadas por el plantel. Para agregar una carrera nueva: añadir su clave aquí
+# y su plan de estudios correspondiente en PLANES_DE_ESTUDIO. No renombrar ni eliminar una
+# clave existente si ya hay alumnos dados de alta con esa carrera.
+CARRERAS = {
+    "ITSE": "Ingeniería en Telecomunicaciones, Sistemas y Electrónica",
+    "CONT": "Contaduría",
+    "ADMON": "Administración",
+}
+
+PLANES_DE_ESTUDIO = {
+    "ITSE": {
+        "1er Semestre": [
+            {"nombre": "Álgebra", "creditos": 10},
+            {"nombre": "Cálculo Diferencial e Integral", "creditos": 8},
+            {"nombre": "Geometría Analítica", "creditos": 8},
+            {"nombre": "Simulación de Sistemas", "creditos": 8},
+            {"nombre": "Algoritmos y Programación Estructurada", "creditos": 8},
+            {"nombre": "Comunicación Oral y Escrita", "creditos": 6}
+        ],
+        "2do Semestre": [
+            {"nombre": "Ética Profesional", "creditos": 6},
+            {"nombre": "Cálculo Vectorial", "creditos": 10},
+            {"nombre": "Estática", "creditos": 8},
+            {"nombre": "Estructura de Datos", "creditos": 8},
+            {"nombre": "Sistemas Operativos", "creditos": 8},
+            {"nombre": "Transformadas Especiales", "creditos": 8},
+            {"nombre": "Introducción al desarrollo sustentable", "creditos": 0}
+        ],
+        "3er Semestre": [
+            {"nombre": "Electricidad y Magnetismo", "creditos": 10},
+            {"nombre": "Cinemática y Dinámica", "creditos": 10},
+            {"nombre": "Ingeniería de Software", "creditos": 8},
+            {"nombre": "Neumática e Hidráulica", "creditos": 8},
+            {"nombre": "Ecuaciones Diferenciales y en Diferencias", "creditos": 10},
+            {"nombre": "Género, igualdad y cultura de paz", "creditos": 0}
+        ],
+        "4to Semestre": [
+            {"nombre": "Fundamentos de Termodinámica", "creditos": 8},
+            {"nombre": "Óptica y Acústica", "creditos": 10},
+            {"nombre": "Comercialización en Tecnologías de Información", "creditos": 6},
+            {"nombre": "Automatización y Electrónica", "creditos": 8},
+            {"nombre": "Aspectos Básicos en el Desarrollo Empresarial", "creditos": 8},
+            {"nombre": "Análisis de Sistemas y Señales", "creditos": 8},
+            {"nombre": "Circuitos Eléctricos", "creditos": 10}
+        ],
+        "5to Semestre": [
+            {"nombre": "Bases de Datos", "creditos": 8},
+            {"nombre": "Probabilidad y Estadística", "creditos": 8},
+            {"nombre": "Dispositivos y Circuitos Electrónicos", "creditos": 10},
+            {"nombre": "Sistemas Digitales", "creditos": 10},
+            {"nombre": "Teoría Electromagnética", "creditos": 10}
+        ],
+        "6to Semestre": [
+            {"nombre": "Sistemas Analógicos", "creditos": 8},
+            {"nombre": "Fundamentos de Sistemas de Comunicaciones", "creditos": 10},
+            {"nombre": "Amplificación de Señales", "creditos": 10},
+            {"nombre": "Ingeniería de Control", "creditos": 10},
+            {"nombre": "Máquinas Eléctricas", "creditos": 10}
+        ],
+        "7mo Semestre": [
+            {"nombre": "Sistemas de Datos Muestreados", "creditos": 8},
+            {"nombre": "Microprocesadores", "creditos": 10},
+            {"nombre": "Comunicaciones Digitales", "creditos": 10},
+            {"nombre": "Electrónica Analógica", "creditos": 10},
+            {"nombre": "Telefonía Digital", "creditos": 8}
+        ],
+        "8vo Semestre": [
+            {"nombre": "Control Digital", "creditos": 10},
+            {"nombre": "Microcontroladores", "creditos": 8},
+            {"nombre": "Transmisión de Datos", "creditos": 8},
+            {"nombre": "Dispositivos Lógicos Programables", "creditos": 8},
+            {"nombre": "Sistemas de Audio y Video", "creditos": 8}
+        ],
+        "9no Semestre - Módulo: Comunicaciones": [
+            {"nombre": "Sistemas de Comunicaciones Ópticos", "creditos": 8},
+            {"nombre": "Antenas", "creditos": 8},
+            {"nombre": "Microondas y Satélites", "creditos": 8}
+        ],
+        "9no Semestre - Módulo: Ingeniería de Control y Mecatrónica": [
+            {"nombre": "Control Avanzado", "creditos": 8},
+            {"nombre": "Autómatas Programables", "creditos": 8},
+            {"nombre": "Robótica", "creditos": 8}
+        ],
+        "9no Semestre - Módulo: Sistemas Analógicos": [
+            {"nombre": "Electrónica de Potencia", "creditos": 8},
+            {"nombre": "Instrumentación Electrónica", "creditos": 8},
+            {"nombre": "Sistemas Microelectrónicos Avanzados", "creditos": 8}
+        ],
+        "9no Semestre - Módulo: Sistemas de Información": [
+            {"nombre": "Análisis de Redes de Datos", "creditos": 8},
+            {"nombre": "Bases de Datos Avanzadas", "creditos": 8},
+            {"nombre": "Desarrollo de Proyectos de Software", "creditos": 8}
+        ],
+        "9no Semestre - Módulo: Sistemas Digitales": [
+            {"nombre": "Diseño de Sistemas Digitales", "creditos": 8},
+            {"nombre": "Sistemas Basados en Redes Neuronales", "creditos": 8},
+            {"nombre": "Sistemas Inteligentes", "creditos": 8}
+        ],
+        "Optativas de Elección": [
+            {"nombre": "Control de Sistemas Difusos", "creditos": 8},
+            {"nombre": "Bases de Datos Especiales", "creditos": 8},
+            {"nombre": "Cableado Estructurado", "creditos": 8},
+            {"nombre": "Compresión de Datos", "creditos": 8},
+            {"nombre": "Control Adaptable", "creditos": 8},
+            {"nombre": "Diseño de Sistemas de Comunicaciones", "creditos": 8},
+            {"nombre": "Control de Sistemas No Lineales", "creditos": 8},
+            {"nombre": "Control Difuso", "creditos": 8},
+            {"nombre": "Control Estocástico", "creditos": 8},
+            {"nombre": "Diseño de Interfaces de Usuario", "creditos": 8},
+            {"nombre": "Dispositivos y Circuitos de Radiofrecuencia (RF)", "creditos": 8},
+            {"nombre": "Diseño de Sistemas de Información", "creditos": 8},
+            {"nombre": "Diseño de Sistemas Digitales Avanzados", "creditos": 8},
+            {"nombre": "Dispositivos Electrónicos Especiales", "creditos": 8},
+            {"nombre": "Dispositivos y Circuitos para Microondas", "creditos": 8},
+            {"nombre": "Seguridad en Sistemas de Información", "creditos": 8},
+            {"nombre": "Domótica", "creditos": 8},
+            {"nombre": "Instrumentación Electrónica Avanzada", "creditos": 8},
+            {"nombre": "Minería de Datos", "creditos": 8},
+            {"nombre": "Procesamiento Digital de Señales", "creditos": 8},
+            {"nombre": "Sistemas Expertos", "creditos": 8},
+            {"nombre": "Sistemas Basados en Algoritmos Genéticos", "creditos": 8},
+            {"nombre": "Sistemas de Automatización y Robótica", "creditos": 8},
+            {"nombre": "Sistemas de Comunicación Inalámbricos Móviles", "creditos": 8},
+            {"nombre": "Sistemas de Comunicaciones Multimedia", "creditos": 8},
+            {"nombre": "Telemática", "creditos": 8},
+            {"nombre": "Técnicas de Recuperación de Información", "creditos": 8},
+            {"nombre": "Diseño de Aplicaciones para Dispositivos Móviles con Java", "creditos": 8}
+        ]
+    },
+
+    # Fuente: Plan 2008 — https://07156d37-2c43-4621-93a9-a6abd9275020.filesusr.com/ugd/3b4ada_b51de36a8cc941f5a5725e5ad807ce33.pdf
+    # 416 créditos totales (incluye 40 créditos optativos de un banco de 26 materias
+    # no detalladas en el documento fuente, por eso no están aquí).
+    "CONT": {
+        "1er Semestre": [
+            {"nombre": "Contabilidad Básica", "creditos": 12},
+            {"nombre": "Taller Aplicado a Contabilidad Básica", "creditos": 2},
+            {"nombre": "Introducción a los Enfoques Administrativos", "creditos": 12},
+            {"nombre": "Introducción al Estudio del Derecho", "creditos": 8},
+            {"nombre": "Fundamentos Matemáticos para Ciencias Administrativas", "creditos": 10},
+            {"nombre": "Herramientas Básicas de Cómputo", "creditos": 8}
+        ],
+        "2do Semestre": [
+            {"nombre": "Contabilidad Intermedia", "creditos": 12},
+            {"nombre": "Taller de Contabilidad Intermedia", "creditos": 2},
+            {"nombre": "Tendencias Administrativas Contemporáneas", "creditos": 10},
+            {"nombre": "Derecho Constitucional y Administrativo", "creditos": 8},
+            {"nombre": "Matemáticas Financieras", "creditos": 10},
+            {"nombre": "Fundamentos del Comportamiento Humano", "creditos": 8},
+            {"nombre": "Redacción", "creditos": 4}
+        ],
+        "3er Semestre": [
+            {"nombre": "Contabilidad Superior", "creditos": 12},
+            {"nombre": "Taller Aplicado a Contabilidad Superior", "creditos": 2},
+            {"nombre": "Administración de Recursos Humanos", "creditos": 6},
+            {"nombre": "Derecho Mercantil", "creditos": 8},
+            {"nombre": "Estadística Descriptiva", "creditos": 10},
+            {"nombre": "Economía y Globalización", "creditos": 6},
+            {"nombre": "Ética y Valores", "creditos": 4}
+        ],
+        "4to Semestre": [
+            {"nombre": "Contabilidad de Sociedades", "creditos": 8},
+            {"nombre": "Fundamentos de Costos y Costos Históricos", "creditos": 12},
+            {"nombre": "Taller Aplicado a Fundamentos de Costos y Costos Históricos", "creditos": 2},
+            {"nombre": "Derecho Laboral", "creditos": 8},
+            {"nombre": "Inferencia Estadística", "creditos": 10},
+            {"nombre": "Macroeconomía", "creditos": 6}
+        ],
+        "5to Semestre": [
+            {"nombre": "Fundamentos Financieros", "creditos": 10},
+            {"nombre": "Producción Conjunta y Costos Estimados", "creditos": 12},
+            {"nombre": "Taller Aplicado a Producción Conjunta", "creditos": 2},
+            {"nombre": "Derecho Fiscal", "creditos": 8},
+            {"nombre": "Metodología de la Investigación", "creditos": 8},
+            {"nombre": "Microeconomía", "creditos": 6}
+        ],
+        "6to Semestre": [
+            {"nombre": "Planeación y Control Financiero", "creditos": 10},
+            {"nombre": "Costos Estándar y Costo Directo", "creditos": 12},
+            {"nombre": "Taller Aplicado a Costos Estándar y Costo Directo", "creditos": 2},
+            {"nombre": "Estudio Fiscal de las Personas Morales", "creditos": 10},
+            {"nombre": "Fundamentos de Auditoría", "creditos": 10},
+            {"nombre": "Nómina y Contribuciones de Seguridad Social", "creditos": 6}
+        ],
+        "7mo Semestre": [
+            {"nombre": "Formulación y Evaluación de Proyecto de Inversión", "creditos": 10},
+            {"nombre": "Administración Pública", "creditos": 8},
+            {"nombre": "Emprendedores", "creditos": 8},
+            {"nombre": "Estudio Fiscal de las Personas Físicas", "creditos": 10},
+            {"nombre": "Auditoría a los Estados Financieros", "creditos": 8},
+            {"nombre": "Normatividad Ética del Lic. en Contaduría", "creditos": 4}
+        ],
+        "8vo Semestre": [
+            {"nombre": "Dictamen de los Estados Financieros", "creditos": 8}
+        ],
+        "8vo-9no Semestre - Módulo: Auditoría": [
+            {"nombre": "Auditoría Fiscal", "creditos": 8},
+            {"nombre": "Contraloría", "creditos": 8},
+            {"nombre": "Código Fiscal de la Federación", "creditos": 8}
+        ],
+        "8vo-9no Semestre - Módulo: Comercio Exterior": [
+            {"nombre": "Impuestos de Importación y Exportación", "creditos": 8},
+            {"nombre": "Aspectos Fiscales de los Tratados Internacionales", "creditos": 8},
+            {"nombre": "Legislación Aduanal", "creditos": 8}
+        ],
+        "8vo-9no Semestre - Módulo: Finanzas": [
+            {"nombre": "Administración Financiera", "creditos": 8},
+            {"nombre": "Finanzas Internacionales", "creditos": 8},
+            {"nombre": "Ingeniería Financiera y Mercado de Divisas", "creditos": 8}
+        ],
+        "8vo-9no Semestre - Módulo: Fiscal": [
+            {"nombre": "Código Fiscal de la Federación", "creditos": 8},
+            {"nombre": "Tópicos Fiscales", "creditos": 8},
+            {"nombre": "Derecho Penal Fiscal", "creditos": 8}
+        ],
+        "8vo-9no Semestre - Módulo: Costos": [
+            {"nombre": "Administración de la Calidad", "creditos": 8},
+            {"nombre": "El Costo: Evolución e Impacto", "creditos": 8},
+            {"nombre": "Análisis de la Tendencia del Costo", "creditos": 8}
+        ]
+    },
+
+    # Fuente: Plan 2009 — https://www.cuautitlan.unam.mx/licenciaturas/administracion/descargas/Mapa_curricular.pdf
+    # (dominio oficial FESC). El documento solo cubre 7 semestres: para 8vo y 9no
+    # únicamente indica "dos optativas del área profesionalizante más dos optativas
+    # de elección" sin nombrarlas ni asignarles créditos — pendiente hasta confirmar
+    # con la coordinación o localizar el documento que las liste.
+    "ADMON": {
+        "1er Semestre": [
+            {"nombre": "Teorías y Funciones de la Administración", "creditos": 10},
+            {"nombre": "Tecnologías de la Información y la Comunicación", "creditos": 8},
+            {"nombre": "Matemáticas Aplicadas a la Administración", "creditos": 10},
+            {"nombre": "Fundamentos de Contabilidad", "creditos": 10},
+            {"nombre": "Derecho Civil y Mercantil", "creditos": 8},
+            {"nombre": "Desarrollo de Hab. de la Comunicación Adtiva.", "creditos": 10}
+        ],
+        "2do Semestre": [
+            {"nombre": "Administración del Capital Humano", "creditos": 10},
+            {"nombre": "Contabilidad Financiera", "creditos": 10},
+            {"nombre": "Gestión Administrativa", "creditos": 10},
+            {"nombre": "Lectura y Análisis de Textos Administrativos", "creditos": 6},
+            {"nombre": "Derecho Constitucional y Administrativo", "creditos": 8},
+            {"nombre": "Matemáticas Financieras", "creditos": 10}
+        ],
+        "3er Semestre": [
+            {"nombre": "Administración de Organizaciones", "creditos": 8},
+            {"nombre": "Administración de Prestaciones", "creditos": 6},
+            {"nombre": "Contabilidad de Costos", "creditos": 10},
+            {"nombre": "Estadística Descriptiva y Probabilidad", "creditos": 10},
+            {"nombre": "Ética y Valores", "creditos": 6},
+            {"nombre": "Derecho Laboral", "creditos": 8}
+        ],
+        "4to Semestre": [
+            {"nombre": "Introducción a las Finanzas y Proyectos de Inversión", "creditos": 10},
+            {"nombre": "Modelos Organizacionales", "creditos": 6},
+            {"nombre": "Sistemas de Información Automatizados en las Organizaciones", "creditos": 8},
+            {"nombre": "Sistemas de Evaluación del Capital Humano", "creditos": 10},
+            {"nombre": "Inferencia Estadística", "creditos": 10}
+        ],
+        "5to Semestre": [
+            {"nombre": "Metodología de la Investigación", "creditos": 6},
+            {"nombre": "Administración de Evaluación de Inversiones", "creditos": 10},
+            {"nombre": "Administración Estratégica", "creditos": 10},
+            {"nombre": "Derecho Penal y Fiscal", "creditos": 8},
+            {"nombre": "Investigación de Operaciones", "creditos": 10},
+            {"nombre": "Teoría de la Calidad", "creditos": 8},
+            {"nombre": "Microeconomía", "creditos": 6}
+        ],
+        "6to Semestre": [
+            {"nombre": "Administración de la Producción", "creditos": 10},
+            {"nombre": "Desarrollo Sustentable", "creditos": 4},
+            {"nombre": "Fundamentos de Mercadotecnia", "creditos": 10},
+            {"nombre": "Sistemas de Aseguramiento de la Calidad", "creditos": 10},
+            {"nombre": "Macroeconomía", "creditos": 6},
+            {"nombre": "Auditoría Administrativa", "creditos": 8}
+        ],
+        "7mo Semestre": [
+            {"nombre": "Administración de Operaciones", "creditos": 10},
+            {"nombre": "Análisis Socioeconómico de México", "creditos": 6},
+            {"nombre": "Desarrollo de Emprendedores", "creditos": 8},
+            {"nombre": "Investigación de Mercados", "creditos": 8},
+            {"nombre": "Logística", "creditos": 8}
+        ]
+    },
 }
 
 # --- BASE DE DATOS ---
 def get_db():
-    conexion = sqlite3.connect('itse_fesc.db')
+    conexion = sqlite3.connect('base_dts.db')
     conexion.row_factory = sqlite3.Row
     return conexion
+
+def _es_hash_valido(password):
+    """True si la contraseña ya está hasheada con werkzeug.security (evita rehashear dos veces)."""
+    return isinstance(password, str) and password.startswith(('pbkdf2:', 'scrypt:'))
+
+def _migrar_passwords_en_texto_plano(cur, tabla, columna_usuario):
+    filas = cur.execute(f"SELECT {columna_usuario}, password FROM {tabla}").fetchall()
+    for usuario, password in filas:
+        if not _es_hash_valido(password):
+            cur.execute(f"UPDATE {tabla} SET password=? WHERE {columna_usuario}=?",
+                        (generate_password_hash(password), usuario))
+
+def _asegurar_columna(cur, tabla, columna, definicion):
+    """Agrega una columna a una tabla ya existente si todavía no la tiene (migración idempotente)."""
+    columnas = [fila[1] for fila in cur.execute(f"PRAGMA table_info({tabla})").fetchall()]
+    if columna not in columnas:
+        cur.execute(f"ALTER TABLE {tabla} ADD COLUMN {columna} {definicion}")
+
+def _eliminar_columna(cur, tabla, columna):
+    """Quita una columna de una tabla ya existente si todavía la tiene (migración idempotente)."""
+    columnas = [fila[1] for fila in cur.execute(f"PRAGMA table_info({tabla})").fetchall()]
+    if columna in columnas:
+        cur.execute(f"ALTER TABLE {tabla} DROP COLUMN {columna}")
 
 def init_db():
     con = get_db()
     cur = con.cursor()
     cur.execute('''CREATE TABLE IF NOT EXISTS alumnos
-                    (cuenta TEXT PRIMARY KEY, password TEXT, nombre TEXT, semestre TEXT)''')
+                    (cuenta TEXT PRIMARY KEY, password TEXT, nombre TEXT,
+                     password_temporal INTEGER DEFAULT 0, carrera TEXT DEFAULT 'ITSE')''')
     cur.execute('''CREATE TABLE IF NOT EXISTS profesores
-                    (usuario TEXT PRIMARY KEY, password TEXT, nombre TEXT)''')
+                    (usuario TEXT PRIMARY KEY, password TEXT, nombre TEXT,
+                     password_temporal INTEGER DEFAULT 0)''')
     cur.execute('''CREATE TABLE IF NOT EXISTS administradores
                     (usuario TEXT PRIMARY KEY, password TEXT, nombre TEXT)''')
+    _asegurar_columna(cur, "alumnos", "password_temporal", "INTEGER DEFAULT 0")
+    _asegurar_columna(cur, "alumnos", "carrera", "TEXT DEFAULT 'ITSE'")
+    _eliminar_columna(cur, "alumnos", "semestre")
+    _asegurar_columna(cur, "profesores", "password_temporal", "INTEGER DEFAULT 0")
     cur.execute('''CREATE TABLE IF NOT EXISTS evaluaciones
                     (cuenta TEXT, materia TEXT, estilo TEXT, recomendacion TEXT,
                      PRIMARY KEY (cuenta, materia))''')
@@ -204,12 +432,17 @@ def init_db():
     # Migrar datos iniciales si las tablas están vacías
     if not cur.execute("SELECT 1 FROM alumnos LIMIT 1").fetchone():
         for cuenta, d in BASE_DE_DATOS.items():
-            cur.execute("INSERT INTO alumnos VALUES (?,?,?,?)",
-                        (cuenta, d["password"], d["nombre"], d["semestre"]))
+            cur.execute("INSERT INTO alumnos (cuenta, password, nombre, carrera) VALUES (?,?,?,?)",
+                        (cuenta, generate_password_hash(d["password"]), d["nombre"], d.get("carrera", "ITSE")))
     if not cur.execute("SELECT 1 FROM profesores LIMIT 1").fetchone():
-        cur.execute("INSERT INTO profesores VALUES (?,?,?)", ("Profe01", "456", "Prof. García"))
+        cur.execute("INSERT INTO profesores (usuario, password, nombre) VALUES (?,?,?)", ("Profe01", generate_password_hash("456"), "Prof. García"))
     if not cur.execute("SELECT 1 FROM administradores LIMIT 1").fetchone():
-        cur.execute("INSERT INTO administradores VALUES (?,?,?)", ("admin", "admin", "Administración FESC"))
+        cur.execute("INSERT INTO administradores VALUES (?,?,?)", ("admin", generate_password_hash("admin"), "Administración FESC"))
+
+    # Migrar a hash cualquier contraseña en texto plano que ya existiera (bases de datos previas a este cambio)
+    _migrar_passwords_en_texto_plano(cur, "alumnos", "cuenta")
+    _migrar_passwords_en_texto_plano(cur, "profesores", "usuario")
+    _migrar_passwords_en_texto_plano(cur, "administradores", "usuario")
 
     cur.execute('''CREATE TABLE IF NOT EXISTS actividades_ia
                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -253,6 +486,9 @@ def get_admin(usuario):
     con.close()
     return dict(row) if row else None
 
+def _generar_password_temporal():
+    return secrets.token_urlsafe(6)
+
 def get_todos_alumnos():
     con = get_db()
     rows = con.execute("SELECT * FROM alumnos").fetchall()
@@ -265,8 +501,14 @@ def get_todos_profesores():
     con.close()
     return {r["usuario"]: dict(r) for r in rows}
 
+def get_todos_admins():
+    con = get_db()
+    rows = con.execute("SELECT * FROM administradores").fetchall()
+    con.close()
+    return {r["usuario"]: dict(r) for r in rows}
+
 def obtener_materias_inscritas(cuenta):
-    conexion = sqlite3.connect('itse_fesc.db')
+    conexion = sqlite3.connect('base_dts.db')
     cursor = conexion.cursor()
     cursor.execute("SELECT materia FROM inscripciones WHERE cuenta=? ", (cuenta,))
     filas = cursor.fetchall()
@@ -344,9 +586,11 @@ def login():
             error = "El código CAPTCHA es incorrecto. Inténtalo de nuevo."
         else:
             alumno = get_alumno(cuenta)
-            if alumno and alumno['password'] == password:
+            if alumno and check_password_hash(alumno['password'], password):
                 session.permanent = True
                 session['usuario'] = cuenta
+                if alumno.get('password_temporal'):
+                    return redirect(url_for('cambiar_contrasena'))
                 return redirect(url_for('inicio'))
             else:
                 error = "Número de cuenta o contraseña incorrectos."
@@ -358,8 +602,9 @@ def inicio():
     cuenta_actual = session['usuario']
     datos_alumno = get_alumno(cuenta_actual)
     datos_alumno['materias'] = obtener_materias_inscritas(cuenta_actual)
+    datos_alumno['carrera_nombre'] = CARRERAS.get(datos_alumno.get('carrera'), datos_alumno.get('carrera') or '—')
 
-    conexion = sqlite3.connect('itse_fesc.db')
+    conexion = sqlite3.connect('base_dts.db')
     cursor = conexion.cursor()
     cursor.execute("SELECT materia, estilo, recomendacion FROM evaluaciones WHERE cuenta=?", (cuenta_actual,))
     filas = cursor.fetchall()
@@ -373,23 +618,28 @@ def materias():
     cuenta_actual = session['usuario']
     datos_alumno = get_alumno(cuenta_actual)
     datos_alumno['materias'] = obtener_materias_inscritas(cuenta_actual)
-    return render_template('materias.html', alumno=datos_alumno, plan=PLAN_DE_ESTUDIOS)
+    plan_alumno = PLANES_DE_ESTUDIO.get(datos_alumno.get('carrera'), {})
+    return render_template('materias.html', alumno=datos_alumno, plan=plan_alumno)
 
 @app.route('/guardar_materias', methods=['POST'])
 def guardar_materias():
     if 'usuario' not in session: return redirect(url_for('login'))
-    
+
     cuenta_actual = session['usuario']
+    datos_alumno = get_alumno(cuenta_actual)
+    if datos_alumno.get('carrera') not in PLANES_DE_ESTUDIO:
+        return redirect(url_for('mis_materias'))
+
     materias_seleccionadas = request.form.getlist('materias_inscritas')
-    
+
     total_creditos = 0
-    for semestre, lista in PLAN_DE_ESTUDIOS.items():
+    for semestre, lista in PLANES_DE_ESTUDIO[datos_alumno['carrera']].items():
         for mat in lista:
             if mat['nombre'] in materias_seleccionadas:
                 total_creditos += mat['creditos']
-                
+
     if total_creditos <= 64:
-        conexion = sqlite3.connect('itse_fesc.db')
+        conexion = sqlite3.connect('base_dts.db')
         cursor = conexion.cursor()
         cursor.execute("DELETE FROM inscripciones WHERE cuenta=?", (cuenta_actual,))
         for mat in materias_seleccionadas:
@@ -406,7 +656,7 @@ def mis_materias():
     datos_alumno = get_alumno(cuenta_actual)
     datos_alumno['materias'] = obtener_materias_inscritas(cuenta_actual)
 
-    conexion = sqlite3.connect('itse_fesc.db')
+    conexion = sqlite3.connect('base_dts.db')
     cursor = conexion.cursor()
     cursor.execute("SELECT materia, estilo FROM evaluaciones WHERE cuenta=?", (cuenta_actual,))
     filas = cursor.fetchall()
@@ -427,10 +677,42 @@ def recuperar_contrasena():
         cuenta = request.form.get('cuenta', '').strip()
         alumno = get_alumno(cuenta)
         if alumno:
-            mensaje = f"Tu contraseña actual es: {alumno['password']}"
+            nueva_temporal = _generar_password_temporal()
+            con = get_db()
+            con.execute("UPDATE alumnos SET password=?, password_temporal=1 WHERE cuenta=?",
+                        (generate_password_hash(nueva_temporal), cuenta))
+            con.commit()
+            con.close()
+            mensaje = f"Tu nueva contraseña temporal es: {nueva_temporal}. Al iniciar sesión con ella te pediremos que la cambies por una de tu elección."
         else:
             error = "No se encontró ningún alumno con ese número de cuenta."
     return render_template('recuperar_contrasena.html', mensaje=mensaje, error=error)
+
+@app.route('/cambiar_contrasena', methods=['GET', 'POST'])
+def cambiar_contrasena():
+    if 'usuario' not in session: return redirect(url_for('login'))
+    cuenta_actual = session['usuario']
+    alumno = get_alumno(cuenta_actual)
+    error = None
+    if request.method == 'POST':
+        password_actual = request.form.get('password_actual', '')
+        password_nueva = request.form.get('password_nueva', '')
+        password_confirmar = request.form.get('password_confirmar', '')
+        if not check_password_hash(alumno['password'], password_actual):
+            error = "Tu contraseña actual no es correcta."
+        elif len(password_nueva) < 6:
+            error = "La nueva contraseña debe tener al menos 6 caracteres."
+        elif password_nueva != password_confirmar:
+            error = "La confirmación no coincide con la nueva contraseña."
+        else:
+            con = get_db()
+            con.execute("UPDATE alumnos SET password=?, password_temporal=0 WHERE cuenta=?",
+                        (generate_password_hash(password_nueva), cuenta_actual))
+            con.commit()
+            con.close()
+            return redirect(url_for('inicio'))
+    return render_template('cambiar_contrasena.html', error=error,
+                            era_temporal=bool(alumno.get('password_temporal')))
 
 @app.route('/test/<nombre_materia>')
 def test_materia(nombre_materia):
@@ -462,7 +744,7 @@ def evaluar():
         except Exception:
             actividades_generadas = "1. Mapas conceptuales: Organiza los temas en esquemas visuales.\n2. Fichas de repaso: Resume cada tema en tarjetas de estudio.\n3. Práctica guiada: Resuelve ejercicios del libro paso a paso."
 
-        conexion = sqlite3.connect('itse_fesc.db')
+        conexion = sqlite3.connect('base_dts.db')
         cursor = conexion.cursor()
         cursor.execute("REPLACE INTO evaluaciones (cuenta, materia, estilo, recomendacion) VALUES (?, ?, ?, ?)",
                        (cuenta_actual, materia_evaluada, estilo_ganador, consejo_generado))
@@ -644,9 +926,11 @@ def profesor_login():
             error = "El código CAPTCHA es incorrecto. Inténtalo de nuevo."
         else:
             prof = get_profesor(usuario)
-            if prof and prof["password"] == password:
+            if prof and check_password_hash(prof["password"], password):
                 session.permanent = True
                 session["profesor"] = usuario
+                if prof.get('password_temporal'):
+                    return redirect(url_for('profesor_cambiar_contrasena'))
                 return redirect(url_for("profesor_dashboard"))
             else:
                 error = "Usuario o contraseña incorrectos."
@@ -665,10 +949,42 @@ def profesor_recuperar_contrasena():
         usuario = request.form.get('usuario', '').strip()
         profesor = get_profesor(usuario)
         if profesor:
-            mensaje = f"Tu contraseña actual es: {profesor['password']}"
+            nueva_temporal = _generar_password_temporal()
+            con = get_db()
+            con.execute("UPDATE profesores SET password=?, password_temporal=1 WHERE usuario=?",
+                        (generate_password_hash(nueva_temporal), usuario))
+            con.commit()
+            con.close()
+            mensaje = f"Tu nueva contraseña temporal es: {nueva_temporal}. Al iniciar sesión con ella te pediremos que la cambies por una de tu elección."
         else:
             error = "No se encontró ningún profesor con ese usuario."
     return render_template('recuperar_contrasena_prof.html', mensaje=mensaje, error=error)
+
+@app.route('/profesor/cambiar_contrasena', methods=['GET', 'POST'])
+def profesor_cambiar_contrasena():
+    if 'profesor' not in session: return redirect(url_for('profesor_login'))
+    usuario_actual = session['profesor']
+    profesor = get_profesor(usuario_actual)
+    error = None
+    if request.method == 'POST':
+        password_actual = request.form.get('password_actual', '')
+        password_nueva = request.form.get('password_nueva', '')
+        password_confirmar = request.form.get('password_confirmar', '')
+        if not check_password_hash(profesor['password'], password_actual):
+            error = "Tu contraseña actual no es correcta."
+        elif len(password_nueva) < 6:
+            error = "La nueva contraseña debe tener al menos 6 caracteres."
+        elif password_nueva != password_confirmar:
+            error = "La confirmación no coincide con la nueva contraseña."
+        else:
+            con = get_db()
+            con.execute("UPDATE profesores SET password=?, password_temporal=0 WHERE usuario=?",
+                        (generate_password_hash(password_nueva), usuario_actual))
+            con.commit()
+            con.close()
+            return redirect(url_for('profesor_dashboard'))
+    return render_template('cambiar_contrasena_prof.html', error=error,
+                            era_temporal=bool(profesor.get('password_temporal')))
 
 @app.route("/profesor/dashboard")
 def profesor_dashboard():
@@ -676,7 +992,7 @@ def profesor_dashboard():
         return redirect(url_for("profesor_login"))
     nombre_profesor = get_profesor(session["profesor"])["nombre"]
 
-    conexion = sqlite3.connect("itse_fesc.db")
+    conexion = sqlite3.connect("base_dts.db")
     cursor = conexion.cursor()
     cursor.execute("""
         SELECT e.cuenta, e.materia, e.estilo, e.recomendacion,
@@ -722,7 +1038,7 @@ def profesor_corregir():
     nombre_profesor = get_profesor(usuario_profesor)["nombre"]
     fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
 
-    conexion = sqlite3.connect("itse_fesc.db")
+    conexion = sqlite3.connect("base_dts.db")
     cursor = conexion.cursor()
     cursor.execute("""REPLACE INTO correcciones_profesor
                       (cuenta, materia, recomendacion_corregida, profesor, fecha)
@@ -743,7 +1059,7 @@ def admin_login():
         usuario = request.form["usuario"]
         password = request.form["password"]
         adm = get_admin(usuario)
-        if adm and adm["password"] == password:
+        if adm and check_password_hash(adm["password"], password):
             session.permanent = True
             session["admin"] = usuario
             return redirect(url_for("admin_dashboard"))
@@ -762,7 +1078,7 @@ def admin_dashboard():
         return redirect(url_for("admin_login"))
     nombre_admin = get_admin(session["admin"])["nombre"]
 
-    conexion = sqlite3.connect("itse_fesc.db")
+    conexion = sqlite3.connect("base_dts.db")
     cursor = conexion.cursor()
 
     # Estadísticas generales
@@ -795,9 +1111,10 @@ def admin_dashboard():
         cuenta, materia, estilo, rec_ia, rec_corregida, prof_corrector, fecha = fila
         alumno_row = get_alumno(cuenta)
         nombre_alumno = alumno_row["nombre"] if alumno_row else cuenta
-        semestre = alumno_row["semestre"] if alumno_row else "—"
+        carrera = alumno_row.get("carrera") if alumno_row else None
         if cuenta not in alumnos:
-            alumnos[cuenta] = {"nombre": nombre_alumno, "cuenta": cuenta, "semestre": semestre, "evaluaciones": []}
+            alumnos[cuenta] = {"nombre": nombre_alumno, "cuenta": cuenta,
+                               "carrera": CARRERAS.get(carrera, carrera or "—"), "evaluaciones": []}
         alumnos[cuenta]["evaluaciones"].append({
             "materia": materia,
             "estilo": estilo,
@@ -807,24 +1124,49 @@ def admin_dashboard():
             "fecha_correccion": fecha
         })
 
-    todos_alumnos = get_todos_alumnos()
-    todos_profesores = get_todos_profesores()
-    con = get_db()
-    todos_admins = {r["usuario"]: dict(r) for r in con.execute("SELECT * FROM administradores").fetchall()}
-    con.close()
+    total_alumnos = len(get_todos_alumnos())
+    total_profesores = len(get_todos_profesores())
     return render_template("admin_dashboard.html",
                            admin=nombre_admin,
                            admin_activo=session["admin"],
                            alumnos=alumnos.values(),
-                           total_alumnos=len(todos_alumnos),
-                           total_profesores=len(todos_profesores),
+                           total_alumnos=total_alumnos,
+                           total_profesores=total_profesores,
                            total_alumnos_evaluados=total_alumnos_evaluados,
                            total_evaluaciones=total_evaluaciones,
                            total_correcciones=total_correcciones,
-                           estilos_stats=estilos_stats,
-                           profesores=todos_profesores,
-                           base_alumnos=todos_alumnos,
-                           admins=todos_admins)
+                           estilos_stats=estilos_stats)
+
+@app.route("/admin/alumnos")
+def admin_alumnos():
+    if "admin" not in session:
+        return redirect(url_for("admin_login"))
+    nombre_admin = get_admin(session["admin"])["nombre"]
+    return render_template("admin_alumnos.html",
+                           admin=nombre_admin,
+                           admin_activo=session["admin"],
+                           base_alumnos=get_todos_alumnos(),
+                           carreras=CARRERAS)
+
+@app.route("/admin/profesores")
+def admin_profesores():
+    if "admin" not in session:
+        return redirect(url_for("admin_login"))
+    nombre_admin = get_admin(session["admin"])["nombre"]
+    return render_template("admin_profesores.html",
+                           admin=nombre_admin,
+                           admin_activo=session["admin"],
+                           profesores=get_todos_profesores())
+
+@app.route("/admin/administradores")
+def admin_administradores():
+    if "admin" not in session:
+        return redirect(url_for("admin_login"))
+    nombre_admin = get_admin(session["admin"])["nombre"]
+    return render_template("admin_administradores.html",
+                           admin=nombre_admin,
+                           admin_activo=session["admin"],
+                           admins=get_todos_admins())
 
 @app.route("/admin/agregar_alumno", methods=["POST"])
 def admin_agregar_alumno():
@@ -833,13 +1175,14 @@ def admin_agregar_alumno():
     cuenta = request.form["cuenta"].strip()
     nombre = request.form["nombre"].strip()
     password = request.form["password"].strip()
-    semestre = request.form["semestre"].strip()
-    if cuenta and nombre and password and semestre:
+    carrera = request.form["carrera"].strip()
+    if cuenta and nombre and password and carrera in CARRERAS:
         con = get_db()
-        con.execute("INSERT OR REPLACE INTO alumnos VALUES (?,?,?,?)", (cuenta, password, nombre, semestre))
+        con.execute("INSERT OR REPLACE INTO alumnos (cuenta, password, nombre, carrera) VALUES (?,?,?,?)",
+                     (cuenta, generate_password_hash(password), nombre, carrera))
         con.commit()
         con.close()
-    return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("admin_alumnos"))
 
 @app.route("/admin/agregar_profesor", methods=["POST"])
 def admin_agregar_profesor():
@@ -850,10 +1193,11 @@ def admin_agregar_profesor():
     password = request.form["password"].strip()
     if usuario and nombre and password:
         con = get_db()
-        con.execute("INSERT OR REPLACE INTO profesores VALUES (?,?,?)", (usuario, password, nombre))
+        con.execute("INSERT OR REPLACE INTO profesores (usuario, password, nombre) VALUES (?,?,?)",
+                     (usuario, generate_password_hash(password), nombre))
         con.commit()
         con.close()
-    return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("admin_profesores"))
 
 
 @app.route("/admin/eliminar_alumno", methods=["POST"])
@@ -870,7 +1214,7 @@ def admin_eliminar_alumno():
         con.execute("DELETE FROM tareas_profesor WHERE cuenta=?", (cuenta,))
         con.commit()
         con.close()
-    return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("admin_alumnos"))
 
 @app.route("/admin/eliminar_profesor", methods=["POST"])
 def admin_eliminar_profesor():
@@ -882,7 +1226,7 @@ def admin_eliminar_profesor():
         con.execute("DELETE FROM profesores WHERE usuario=?", (usuario,))
         con.commit()
         con.close()
-    return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("admin_profesores"))
 
 @app.route("/admin/agregar_admin", methods=["POST"])
 def admin_agregar_admin():
@@ -893,10 +1237,10 @@ def admin_agregar_admin():
     password = request.form["password"].strip()
     if usuario and nombre and password:
         con = get_db()
-        con.execute("INSERT OR REPLACE INTO administradores VALUES (?,?,?)", (usuario, password, nombre))
+        con.execute("INSERT OR REPLACE INTO administradores VALUES (?,?,?)", (usuario, generate_password_hash(password), nombre))
         con.commit()
         con.close()
-    return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("admin_administradores"))
 
 @app.route("/admin/eliminar_admin", methods=["POST"])
 def admin_eliminar_admin():
@@ -909,7 +1253,7 @@ def admin_eliminar_admin():
         con.execute("DELETE FROM administradores WHERE usuario=?", (usuario,))
         con.commit()
         con.close()
-    return redirect(url_for("admin_dashboard"))
+    return redirect(url_for("admin_administradores"))
 
 
 # --- ENTREGAS DE TAREAS ---
@@ -966,18 +1310,6 @@ def admin_reporte():
     if "admin" not in session:
         return redirect(url_for("admin_login"))
 
-    import io, matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    import numpy as np
-    from reportlab.lib.pagesizes import letter
-    from reportlab.lib import colors
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
-    from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, Table,
-                                    TableStyle, HRFlowable, PageBreak,
-                                    Image as RLImage, KeepTogether)
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
     from datetime import datetime
 
     # ── Paleta ────────────────────────────────────────────────────────────
@@ -1013,9 +1345,6 @@ def admin_reporte():
     ).fetchall()
     materias_raw = con.execute(
         "SELECT materia, COUNT(*) as c FROM evaluaciones GROUP BY materia ORDER BY c DESC LIMIT 8"
-    ).fetchall()
-    semestres_raw = con.execute(
-        "SELECT semestre, COUNT(*) as c FROM alumnos WHERE semestre IS NOT NULL GROUP BY semestre ORDER BY semestre"
     ).fetchall()
     total_corr  = con.execute("SELECT COUNT(*) FROM correcciones_profesor").fetchone()[0]
     total_entr  = con.execute("SELECT COUNT(*) FROM entregas_tarea").fetchone()[0]
@@ -1132,34 +1461,11 @@ def admin_reporte():
         fig.tight_layout(pad=0.3)
         return fig2rl(fig, 2.6, 2.2)
 
-    # ── Gráfica E: Semestres ──────────────────────────────────────────────
-    def g_semestres():
-        if not semestres_raw: return None
-        sems = [r[0] for r in semestres_raw]
-        vals = [r[1] for r in semestres_raw]
-        fig, ax = plt.subplots(figsize=(3.4, 2.4))
-        bars = ax.bar(range(len(sems)), vals, color=DORADO,
-                      edgecolor='white', width=0.55)
-        ax.set_xticks(range(len(sems)))
-        ax.set_xticklabels(sems, fontsize=7, rotation=20, ha='right')
-        ax.set_ylabel('Alumnos', fontsize=7, color='#555')
-        ax.set_title('Alumnos por Semestre', fontsize=9,
-                     fontweight='bold', color=AZUL, pad=8)
-        ax.yaxis.set_major_locator(plt.MaxNLocator(integer=True))
-        ax.spines['top'].set_visible(False); ax.spines['right'].set_visible(False)
-        ax.tick_params(labelsize=7)
-        for bar, val in zip(bars, vals):
-            ax.text(bar.get_x()+bar.get_width()/2, val+0.03,
-                    str(val), ha='center', va='bottom', fontsize=7.5, fontweight='bold')
-        fig.tight_layout(pad=0.3)
-        return fig2rl(fig, 3.2, 2.2)
-
     # Generar todas las gráficas
     img_pastel   = g_pastel()
     img_estilos  = g_barras_estilos()
     img_materias = g_materias()
     img_dona     = g_dona()
-    img_sems     = g_semestres()
 
     # ── Estilos PDF ───────────────────────────────────────────────────────
     styles = getSampleStyleSheet()
@@ -1265,10 +1571,9 @@ def admin_reporte():
     # ══ PÁGINA 2: Actividad académica + Estado tareas ═════════════════════
     story.append(Paragraph("2. Actividad Academica y Seguimiento de Tareas", s_sec))
 
-    # Fila: materias | semestres | dona — las tres juntas
+    # Fila: materias | dona — juntas
     fila_g2 = []
     if img_materias: fila_g2.append(img_materias)
-    if img_sems:     fila_g2.append(img_sems)
     if img_dona:     fila_g2.append(img_dona)
 
     if fila_g2:
@@ -1288,25 +1593,17 @@ def admin_reporte():
             mat_data.append([mat, str(cnt), f"{cnt/tot_mat*100:.1f}%"])
         story.append(mk_tabla(mat_data, [3.8*inch, 1.5*inch, 1.5*inch]))
 
-    # Tabla resumen de semestres
-    if semestres_raw:
-        story += [Spacer(1,8), Paragraph("Distribucion de alumnos por semestre:", s_sub)]
-        sem_data = [["Semestre","Alumnos","% del total"]]
-        tot_al = len(alumnos_db)
-        for sem, cnt in semestres_raw:
-            sem_data.append([sem, str(cnt), f"{cnt/tot_al*100:.1f}%" if tot_al else "—"])
-        story.append(mk_tabla(sem_data, [2.5*inch, 1.5*inch, 1.5*inch]))
-
     story.append(PageBreak())
 
     # ══ PÁGINA 3: Padrón de alumnos ══════════════════════════════════════
     story.append(Paragraph("3. Padron de Alumnos", s_sec))
-    al_data = [["#","Nombre","No. Cuenta","Semestre","Materias eval."]]
+    al_data = [["#","Nombre","No. Cuenta","Carrera","Materias eval."]]
     for i, al in enumerate(alumnos_db, 1):
         mats = eval_por_cuenta.get(al["cuenta"], [])
         al_data.append([str(i), al["nombre"], al["cuenta"],
-                        al["semestre"] or "—", str(len(mats))])
-    story.append(mk_tabla(al_data, [0.3*inch, 2.6*inch, 1.1*inch, 1.3*inch, 1.0*inch]))
+                        CARRERAS.get(al["carrera"], al["carrera"] or "—"),
+                        str(len(mats))])
+    story.append(mk_tabla(al_data, [0.3*inch, 2.6*inch, 1.2*inch, 1.7*inch, 1.1*inch]))
     story.append(Spacer(1,10))
 
     story.append(Paragraph("Detalle de evaluaciones por alumno:", s_sub))
@@ -1322,7 +1619,7 @@ def admin_reporte():
                 ev["profesor"] or "—"
             ])
         story.append(KeepTogether([
-            Paragraph(f"{al['nombre']}  ·  {al['cuenta']}  ·  {al['semestre'] or '—'}", s_b),
+            Paragraph(f"{al['nombre']}  ·  {al['cuenta']}  ·  {CARRERAS.get(al['carrera'], al['carrera'] or '—')}", s_b),
             Spacer(1,2),
             mk_tabla(ev_data, [2.8*inch, 1.0*inch, 1.2*inch, 1.8*inch]),
             Spacer(1,7),
@@ -1369,4 +1666,4 @@ def admin_reporte():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, threaded=True)

@@ -16,7 +16,7 @@
         <div class="auth-box acento-verde">
             <img src="/static/Logo UNAM.png" alt="Logo UNAM" class="logo">
             <h2>Recuperar contraseña</h2>
-            <p class="subt">Ingresa tu nombre de usuario y te mostraremos tu contraseña actual</p>
+            <p class="subt">Ingresa tu nombre de usuario y te generaremos una nueva contraseña temporal</p>
 
             {% if mensaje %}
                 <div class="mensaje-ok">{{ mensaje }}</div>
@@ -26,6 +26,7 @@
             {% endif %}
 
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="campo">
                     <label>Usuario <span class="req">*</span></label>
                     <div class="input-wrap">

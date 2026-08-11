@@ -24,6 +24,7 @@
             {% endif %}
 
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="campo">
                     <label>Usuario y/o cuenta UNAM <span class="req">*</span></label>
                     <div class="input-wrap">

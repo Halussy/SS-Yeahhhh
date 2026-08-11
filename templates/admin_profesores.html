@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Docentes - ITSE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .form-cards{ display:flex; flex-direction:column; gap:18px; max-width:520px; }
+        .form-header.verde{ background:var(--senal); border-bottom-color:#1F7561; }
+
+        .usuarios-lista{ margin-top:13px; border-top:1px solid var(--linea); padding-top:11px; }
+        .usuarios-lista p{ font-size:10px; font-weight:600; color:var(--texto-mute); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
+        .usuario-item{ display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--texto-sec); padding:5px 0; border-bottom:1px solid var(--fondo); }
+        .usuario-item:last-child{ border-bottom:none; }
+        .usuario-item span{ color:var(--texto-mute); font-size:11px; font-family:var(--fuente-mono); }
+        .usuario-item.oculto{ display:none; }
+
+        .filtros-lista{ display:flex; gap:8px; margin-bottom:4px; }
+        .filtros-lista input[type="text"]{
+            flex:1; padding:7px 10px; border:1px solid var(--linea); border-radius:6px;
+            font-size:12px; color:var(--tinta); font-family:var(--fuente-cuerpo);
+        }
+        .filtros-lista input[type="text"]:focus{ outline:none; border-color:var(--azul); }
+        .sin-resultados{ font-size:12px; color:var(--texto-mute); padding:8px 0; display:none; }
+        .sin-resultados.visible{ display:block; }
+        .btn-eliminar-icon{
+            background:none; border:none; color:var(--alerta); cursor:pointer; padding:3px 5px;
+            border-radius:4px; display:flex; align-items:center; transition:.15s;
+        }
+        .btn-eliminar-icon:hover{ background:var(--alerta-bg); }
+        .btn-eliminar-icon svg{ width:14px; height:14px; }
+    </style>
+</head>
+<body>
+
+<div class="top-navbar">
+    <h2>Panel administrativo · FES Cuautitlán Campo 4</h2>
+    <div class="navbar-right">
+        <span>{{ admin }}</span>
+        <a href="/admin/logout" class="logout-btn">Cerrar sesión</a>
+    </div>
+</div>
+<div class="tabs-container">
+    <a href="/admin/dashboard" class="tab-link">Resumen y evaluaciones</a>
+    <a href="/admin/alumnos" class="tab-link">Alumnos</a>
+    <a href="/admin/profesores" class="tab-link active">Docentes</a>
+    <a href="/admin/administradores" class="tab-link">Administradores</a>
+</div>
+
+<div class="container ancho">
+
+    <div class="form-cards">
+
+        <div class="form-card">
+            <div class="form-header verde">Agregar profesor</div>
+            <div class="form-body">
+                <form method="POST" action="/admin/agregar_profesor">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label>Usuario</label>
+                    <input type="text" name="usuario" required>
+                    <label>Nombre completo</label>
+                    <input type="text" name="nombre" required>
+                    <label>Contraseña</label>
+                    <input type="password" name="password" placeholder="••••••••" required>
+                    <button type="submit" class="btn-accion exito" style="width:100%; justify-content:center;">+ Agregar profesor</button>
+                </form>
+                <div class="usuarios-lista">
+                    <p>Profesores registrados</p>
+                    <div class="filtros-lista">
+                        <input type="text" id="filtro-profesor-texto" placeholder="Buscar por nombre o usuario..." oninput="filtrarProfesores()">
+                    </div>
+                    <div id="lista-profesores">
+                    {% for usuario, datos in profesores.items() %}
+                    <div class="usuario-item" data-nombre="{{ datos.nombre|lower }}" data-usuario="{{ usuario|lower }}">
+                        <strong>{{ datos.nombre }}</strong>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span>{{ usuario }}</span>
+                            <form method="POST" action="/admin/eliminar_profesor" onsubmit="return confirm('¿Eliminar a {{ datos.nombre }}?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="usuario" value="{{ usuario }}">
+                                <button type="submit" class="btn-eliminar-icon" title="Eliminar profesor">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    </div>
+                    <p class="sin-resultados" id="profesores-sin-resultados">Ningún profesor coincide con la búsqueda.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function normalizar(texto) {
+        return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    }
+
+    function filtrarProfesores() {
+        const texto = normalizar(document.getElementById('filtro-profesor-texto').value.trim());
+        const items = document.querySelectorAll('#lista-profesores .usuario-item');
+        let visibles = 0;
+        items.forEach(item => {
+            const mostrar = !texto ||
+                normalizar(item.dataset.nombre).includes(texto) ||
+                normalizar(item.dataset.usuario).includes(texto);
+            item.classList.toggle('oculto', !mostrar);
+            if (mostrar) visibles++;
+        });
+        document.getElementById('profesores-sin-resultados').classList.toggle('visible', visibles === 0);
+    }
+</script>
+
+</body>
+</html>

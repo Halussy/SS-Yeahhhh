@@ -37,6 +37,7 @@
     <h2>Dashboard docente · FES Cuautitlán Campo 4</h2>
     <div class="navbar-right">
         <span>{{ profesor }}</span>
+        <a href="/profesor/cambiar_contrasena" class="cambiar-pwd-btn">Cambiar contraseña</a>
         <a href="/profesor/logout" class="logout-btn">Cerrar sesión</a>
     </div>
 </div>
@@ -114,6 +115,7 @@
             <button class="modal-x" onclick="cerrarModal()">&times;</button>
         </div>
         <form method="POST" action="/profesor/corregir">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="cuenta" id="modal_cuenta">
             <input type="hidden" name="materia" id="modal_materia">
             <div class="modal-body">

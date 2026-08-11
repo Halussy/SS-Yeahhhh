@@ -23,10 +23,12 @@
         .rol-card.docente { border-top-color: #D4A12A; }
         .admin-card { width: 490px; display: flex; align-items: center; gap: 22px; padding: 24px 30px; text-align: left; border-top: 5px solid #27ae60; border-radius: 12px; background: white; text-decoration: none; color: inherit; box-shadow: 0 8px 30px rgba(0,0,0,0.3); transition: transform 0.25s, box-shadow 0.25s; }
         .admin-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,0.4); }
-        .admin-icono { font-size: 42px; flex-shrink: 0; line-height: 1; }
+        .admin-icono { width: 42px; height: 42px; flex-shrink: 0; color: #27ae60; }
         .admin-contenido h3 { font-size: 19px; color: #002B5C; margin-bottom: 8px; }
         .admin-contenido p  { font-size: 13px; color: #888; line-height: 1.5; margin-bottom: 16px; }
-        .icono { font-size: 48px; margin-bottom: 14px; display: block; line-height: 1; }
+        .icono { width: 48px; height: 48px; margin: 0 auto 14px; display: block; }
+        .rol-card.alumno .icono { color: #002B5C; }
+        .rol-card.docente .icono { color: #D4A12A; }
         h3 { font-size: 19px; color: #002B5C; margin-bottom: 8px; }
         p  { font-size: 13px; color: #888; line-height: 1.5; margin-bottom: 20px; }
         .btn-rol { display: inline-block; padding: 10px 24px; border-radius: 6px; font-size: 13px; font-weight: bold; text-decoration: none; transition: 0.2s; white-space: nowrap; }
@@ -53,14 +55,14 @@
         <p class="subtitulo">Selecciona tu rol para continuar al inicio de sesión</p>
         <div class="fila-top">
             <a href="/login" class="rol-card alumno">
-                <span class="icono">🎓</span>
+                <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/><path d="M22 9v6"/></svg>
                 <h3>Alumno</h3>
                 <p>Accede a tus materias inscritas, realiza tu test de estilos de aprendizaje y consulta tus recomendaciones personalizadas.</p>
                 <span class="btn-rol">Iniciar como Alumno</span>
             </a>
             <div class="divisor">o</div>
             <a href="/profesor/login" class="rol-card docente">
-                <span class="icono">📋</span>
+                <svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3v2a1 1 0 001 1h4a1 1 0 001-1V3"/><path d="M8 12h8M8 16h5"/></svg>
                 <h3>Docente</h3>
                 <p>Revisa los resultados y recomendaciones generadas por la IA para tus alumnos y realiza las correcciones necesarias.</p>
                 <span class="btn-rol">Iniciar como Docente</span>
@@ -68,7 +70,7 @@
         </div>
         <div class="fila-bottom">
             <a href="/admin/login" class="admin-card">
-                <span class="admin-icono">🏛️</span>
+                <svg class="admin-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 10l9-6 9 6"/><path d="M4 10v10M8 10v10M12 10v10M16 10v10M20 10v10"/><path d="M2 20h20M2 10h20"/></svg>
                 <div class="admin-contenido">
                     <h3>Administrativo</h3>
                     <p>Consulta el resumen general del portal, revisa el avance de alumnos y profesores, y gestiona los usuarios del sistema.</p>
@@ -78,7 +80,7 @@
         </div>
     </div>
     <div class="footer">
-        Servicio Social · Ingeniería en Telecomunicaciones, Sistemas y Electrónica · FES Cuautitlán
+        Servicio Social · Portal de Estilos de Aprendizaje · FES Cuautitlán
     </div>
 </body>
 </html>
