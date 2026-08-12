@@ -8,11 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
-        .form-cards{ display:flex; flex-direction:column; gap:18px; max-width:520px; }
+        .gestion-layout{ display:grid; grid-template-columns: 420px 1fr; gap:24px; align-items:start; }
+        @media (max-width: 900px){ .gestion-layout{ grid-template-columns: 1fr; } }
 
-        .usuarios-lista{ margin-top:13px; border-top:1px solid var(--linea); padding-top:11px; }
-        .usuarios-lista p{ font-size:10px; font-weight:600; color:var(--texto-mute); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; }
-        .usuario-item{ display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--texto-sec); padding:5px 0; border-bottom:1px solid var(--fondo); }
+        .usuario-item{ display:flex; justify-content:space-between; align-items:center; font-size:13px; color:var(--texto-sec); padding:8px 0; border-bottom:1px solid var(--fondo); }
         .usuario-item:last-child{ border-bottom:none; }
         .usuario-item span{ color:var(--texto-mute); font-size:11px; font-family:var(--fuente-mono); }
         .usuario-item.oculto{ display:none; }
@@ -55,7 +54,7 @@
 
 <div class="container ancho">
 
-    <div class="form-cards">
+    <div class="gestion-layout">
 
         <div class="form-card">
             <div class="form-header">Agregar alumno</div>
@@ -68,6 +67,8 @@
                     <input type="text" name="nombre" required>
                     <label>Contraseña</label>
                     <input type="password" name="password" placeholder="••••••••" required>
+                    <label>Fecha de nacimiento</label>
+                    <input type="date" name="fecha_nacimiento" required>
                     <label>Carrera</label>
                     <select name="carrera" required>
                         <option value="">Seleccionar...</option>
@@ -77,8 +78,13 @@
                     </select>
                     <button type="submit" class="btn-accion primario" style="width:100%; justify-content:center;">+ Agregar alumno</button>
                 </form>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <div class="form-header">Alumnos registrados</div>
+            <div class="form-body">
                 <div class="usuarios-lista">
-                    <p>Alumnos registrados</p>
                     <div class="filtros-lista">
                         <input type="text" id="filtro-alumno-texto" placeholder="Buscar por nombre o cuenta..." oninput="filtrarAlumnos()">
                         <select id="filtro-alumno-carrera" onchange="filtrarAlumnos()">
@@ -93,7 +99,7 @@
                     <div class="usuario-item" data-nombre="{{ datos.nombre|lower }}" data-cuenta="{{ cuenta|lower }}" data-carrera="{{ datos.carrera }}">
                         <strong>{{ datos.nombre }}</strong>
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <span>{{ cuenta }} · {{ carreras.get(datos.carrera, datos.carrera) }}</span>
+                            <span>{{ cuenta }} · {{ carreras.get(datos.carrera, datos.carrera) }}{% if datos.fecha_nacimiento %} · {{ datos.fecha_nacimiento[8:10] }}/{{ datos.fecha_nacimiento[5:7] }}/{{ datos.fecha_nacimiento[0:4] }}{% endif %}</span>
                             <form method="POST" action="/admin/eliminar_alumno" onsubmit="return confirm('¿Eliminar a {{ datos.nombre }}?')">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <input type="hidden" name="cuenta" value="{{ cuenta }}">

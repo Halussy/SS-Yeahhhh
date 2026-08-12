@@ -80,13 +80,7 @@ cliente_ia = genai.Client(api_key=api_key_secreta)
 
 mi_evaluador = EvaluadorEstilosAprendizaje()
 
-BASE_DE_DATOS = {
-    "320001512": {
-        "password": "123",
-        "nombre": "Ricardo Luevano Mote",
-        "carrera": "ITSE"
-    }
-}
+BASE_DE_DATOS = {}
 
 # Carreras ofertadas por el plantel. Para agregar una carrera nueva: añadir su clave aquí
 # y su plan de estudios correspondiente en PLANES_DE_ESTUDIO. No renombrar ni eliminar una
@@ -95,6 +89,12 @@ CARRERAS = {
     "ITSE": "Ingeniería en Telecomunicaciones, Sistemas y Electrónica",
     "CONT": "Contaduría",
     "ADMON": "Administración",
+    "IME": "Ingeniería Mecánica Eléctrica",
+    "DCV": "Diseño y Comunicación Visual",
+    "INDUSTRIAL": "Ingeniería Industrial",
+    "INFORMATICA": "Informática",
+    "AGRICOLA": "Ingeniería Agrícola",
+    "MVZ": "Medicina Veterinaria y Zootecnia",
 }
 
 PLANES_DE_ESTUDIO = {
@@ -372,6 +372,786 @@ PLANES_DE_ESTUDIO = {
             {"nombre": "Logística", "creditos": 8}
         ]
     },
+
+    # Fuente: Descripción Sintética oficial DGAE — https://escolar1.unam.mx/planes/fes_cuautli/Ingmec-ele_cuautitlan.pdf
+    # (aprobado 09/mar/2011). El 9no semestre no agrupa sus materias en módulos con
+    # nombre propio: son dos bolsas libres (elegir 3 de "Obligatorias de Elección" +
+    # 2 de "Optativas"), tal como indica el documento fuente.
+    "IME": {
+        "1er Semestre": [
+            {"nombre": "Álgebra", "creditos": 8},
+            {"nombre": "Cálculo Diferencial e Integral", "creditos": 8},
+            {"nombre": "Computación para Ingeniería", "creditos": 8},
+            {"nombre": "Geometría Analítica", "creditos": 8},
+            {"nombre": "Química", "creditos": 8},
+            {"nombre": "Comunicación Oral y Escrita", "creditos": 6}
+        ],
+        "2do Semestre": [
+            {"nombre": "Álgebra Lineal", "creditos": 6},
+            {"nombre": "Cálculo Vectorial", "creditos": 8},
+            {"nombre": "Dibujo", "creditos": 4},
+            {"nombre": "Estática", "creditos": 8},
+            {"nombre": "Tecnología de Materiales", "creditos": 10},
+            {"nombre": "Termodinámica", "creditos": 10}
+        ],
+        "3er Semestre": [
+            {"nombre": "Termodinámica Aplicada", "creditos": 8},
+            {"nombre": "Ecuaciones Diferenciales", "creditos": 6},
+            {"nombre": "Cinemática y Dinámica", "creditos": 10},
+            {"nombre": "Electricidad y Magnetismo", "creditos": 10},
+            {"nombre": "Ética y Liderazgo", "creditos": 6},
+            {"nombre": "Programación Aplicada a la Ingeniería", "creditos": 8}
+        ],
+        "4to Semestre": [
+            {"nombre": "Análisis de Circuitos Eléctricos", "creditos": 10},
+            {"nombre": "Dinámica de Sistemas Físicos", "creditos": 6},
+            {"nombre": "Mecánica de Fluidos", "creditos": 8},
+            {"nombre": "Mecánica de Sólidos", "creditos": 8},
+            {"nombre": "Métodos Numéricos", "creditos": 8},
+            {"nombre": "Probabilidad y Estadística", "creditos": 8}
+        ],
+        "5to Semestre": [
+            {"nombre": "Ingeniería de Materiales", "creditos": 10},
+            {"nombre": "Electrónica Básica", "creditos": 10},
+            {"nombre": "Medición e Instrumentación Eléctrica", "creditos": 6},
+            {"nombre": "Metodología de la Investigación", "creditos": 6},
+            {"nombre": "Diseño de Elementos de Máquinas", "creditos": 8},
+            {"nombre": "Costos y Evaluación Económica", "creditos": 8}
+        ],
+        "6to Semestre": [
+            {"nombre": "Turbomaquinaria", "creditos": 8},
+            {"nombre": "Control Electromecánico", "creditos": 8},
+            {"nombre": "Mecanismos", "creditos": 8},
+            {"nombre": "Transformadores y Motores de Inducción", "creditos": 10},
+            {"nombre": "Procesos de Conformado de Materiales", "creditos": 10}
+        ],
+        "7mo Semestre": [
+            {"nombre": "Laboratorio de Máquinas Térmicas", "creditos": 4},
+            {"nombre": "Laboratorio de Mecánica de Fluidos", "creditos": 4},
+            {"nombre": "Máquinas de Desplazamiento Positivo", "creditos": 8},
+            {"nombre": "Dinámica de Maquinaria", "creditos": 8},
+            {"nombre": "Máquinas de Corriente Directa y Máquinas Síncronas", "creditos": 10},
+            {"nombre": "Procesos de Corte de Materiales", "creditos": 10}
+        ],
+        "8vo Semestre": [
+            {"nombre": "Transferencia de Calor", "creditos": 8},
+            {"nombre": "Diseño por Computadora", "creditos": 4},
+            {"nombre": "Ingeniería Ecológica", "creditos": 8},
+            {"nombre": "Instalaciones Eléctricas", "creditos": 8},
+            {"nombre": "Sistemas Eléctricos de Potencia I", "creditos": 8},
+            {"nombre": "Teoría de Control y Robótica", "creditos": 10}
+        ],
+        "9no Semestre": [
+            {"nombre": "Gestión Gerencial", "creditos": 6}
+        ],
+        "9no Semestre - Obligatorias de Elección": [
+            {"nombre": "Metalurgia Mecánica", "creditos": 8},
+            {"nombre": "Aire Acondicionado y Refrigeración", "creditos": 8},
+            {"nombre": "Fuentes Alternas de Energía", "creditos": 8},
+            {"nombre": "Plantas de Generación Convencionales", "creditos": 8},
+            {"nombre": "Diseño de Máquinas", "creditos": 8},
+            {"nombre": "Manufactura por Computadora", "creditos": 8},
+            {"nombre": "Diseño de Iluminación por Computadora", "creditos": 8},
+            {"nombre": "Iluminación Exterior", "creditos": 8},
+            {"nombre": "Iluminación Interior", "creditos": 8},
+            {"nombre": "Análisis y Diseño de Sistemas", "creditos": 8},
+            {"nombre": "Control por Computadora de Sistemas Mecatrónicos", "creditos": 8},
+            {"nombre": "Microcontroladores", "creditos": 8},
+            {"nombre": "Protección de Sistemas Eléctricos", "creditos": 8},
+            {"nombre": "Sistemas Eléctricos de Potencia II", "creditos": 8},
+            {"nombre": "Subestaciones Eléctricas", "creditos": 8},
+            {"nombre": "Control y Monitoreo de la Energía", "creditos": 8},
+            {"nombre": "Sistemas de Distribución", "creditos": 8}
+        ],
+        "9no Semestre - Optativas": [
+            {"nombre": "Análisis por Elementos Finitos", "creditos": 8},
+            {"nombre": "Aprovechamiento de la Energía Solar", "creditos": 8},
+            {"nombre": "Automatización Industrial", "creditos": 8},
+            {"nombre": "Cogeneración", "creditos": 8},
+            {"nombre": "Diseño de Herramental", "creditos": 8},
+            {"nombre": "Diseño y Modelación de Equipos Térmicos", "creditos": 8},
+            {"nombre": "Electrónica de Potencia", "creditos": 8},
+            {"nombre": "Emprendedores", "creditos": 8},
+            {"nombre": "Flujo de Potencia", "creditos": 8},
+            {"nombre": "Iluminación Áreas Deportivas", "creditos": 8},
+            {"nombre": "Iluminación Arquitectónica", "creditos": 8},
+            {"nombre": "Inteligencia Artificial", "creditos": 8},
+            {"nombre": "Plantas Generadoras", "creditos": 8},
+            {"nombre": "Programación Lógica", "creditos": 8},
+            {"nombre": "Robótica Aplicada", "creditos": 8},
+            {"nombre": "Sistemas de Transporte Eléctrico", "creditos": 8},
+            {"nombre": "Técnicas de Ahorro de Energía", "creditos": 8},
+            {"nombre": "Teoría de la Calidad", "creditos": 8},
+            {"nombre": "Termoeconomía", "creditos": 8},
+            {"nombre": "Vibraciones Mecánicas", "creditos": 8},
+            {"nombre": "Ingeniería de Procesos Industriales", "creditos": 8}
+        ]
+    },
+
+    # Fuente: Descripción Sintética oficial DGAE, Sistema Escolarizado — https://escolar1.unam.mx/planes/fes_cuautli/Dise%F1Com-Cuau.pdf
+    # (actualizado 19/may/2010). Del 7mo al 8vo semestre el alumno elige 1 de 3
+    # orientaciones (cada una con materias fijas de ambos semestres + 5 optativas
+    # por semestre de una lista propia). Hay además un banco de optativas comunes
+    # a las 3 orientaciones y un bloque de asignaturas extracurriculares sin créditos.
+    "DCV": {
+        "1er Semestre": [
+            {"nombre": "Arte Antiguo", "creditos": 6},
+            {"nombre": "Dibujo I", "creditos": 12},
+            {"nombre": "Diseño I", "creditos": 8},
+            {"nombre": "Geometría I", "creditos": 4},
+            {"nombre": "Metodología de la Investigación I", "creditos": 4},
+            {"nombre": "Teoría de la Imagen I", "creditos": 4},
+            {"nombre": "Teoría de la Comunicación I", "creditos": 6},
+            {"nombre": "Teoría del Arte I", "creditos": 4}
+        ],
+        "2do Semestre": [
+            {"nombre": "Arte Precolombino", "creditos": 6},
+            {"nombre": "Dibujo II", "creditos": 12},
+            {"nombre": "Diseño II", "creditos": 8},
+            {"nombre": "Geometría II", "creditos": 4},
+            {"nombre": "Metodología de la Investigación II", "creditos": 4},
+            {"nombre": "Teoría de la Imagen II", "creditos": 4},
+            {"nombre": "Teoría de la Comunicación II", "creditos": 6},
+            {"nombre": "Teoría del Arte II", "creditos": 4}
+        ],
+        "3er Semestre": [
+            {"nombre": "Arte de la Edad Media y Renacimiento", "creditos": 6},
+            {"nombre": "Dibujo III", "creditos": 12},
+            {"nombre": "Diseño III", "creditos": 8},
+            {"nombre": "Fotografía I", "creditos": 8},
+            {"nombre": "Técnicas y Sistemas de Impresión I", "creditos": 8},
+            {"nombre": "Introducción a la Tecnología Digital I", "creditos": 9},
+            {"nombre": "Teoría de la Comunicación III", "creditos": 6},
+            {"nombre": "Economía para la Comunicación Visual", "creditos": 6}
+        ],
+        "4to Semestre": [
+            {"nombre": "Arte Barroco y Virreinal", "creditos": 6},
+            {"nombre": "Dibujo IV", "creditos": 12},
+            {"nombre": "Diseño IV", "creditos": 8},
+            {"nombre": "Fotografía II", "creditos": 8},
+            {"nombre": "Técnicas y Sistemas de Impresión II", "creditos": 8},
+            {"nombre": "Introducción a la Tecnología Digital II", "creditos": 9},
+            {"nombre": "Teoría de la Comunicación IV", "creditos": 6},
+            {"nombre": "Imagen y Sociedad", "creditos": 6}
+        ],
+        "5to Semestre": [
+            {"nombre": "Arte del Siglo XIX al XX", "creditos": 6},
+            {"nombre": "Administración en la Comunicación Visual", "creditos": 6},
+            {"nombre": "Diseño V", "creditos": 8},
+            {"nombre": "Fotografía III", "creditos": 6},
+            {"nombre": "Laboratorio de Diseño Editorial I", "creditos": 8},
+            {"nombre": "Medios de Comunicación I", "creditos": 4},
+            {"nombre": "Producción Audiovisual I", "creditos": 5},
+            {"nombre": "Semiótica I", "creditos": 6}
+        ],
+        "6to Semestre": [
+            {"nombre": "Arte Contemporáneo", "creditos": 6},
+            {"nombre": "Mercadotecnia en la Comunicación Visual", "creditos": 6},
+            {"nombre": "Diseño VI", "creditos": 8},
+            {"nombre": "Fotografía IV", "creditos": 6},
+            {"nombre": "Laboratorio de Diseño Editorial II", "creditos": 8},
+            {"nombre": "Medios de Comunicación II", "creditos": 4},
+            {"nombre": "Producción Audiovisual II", "creditos": 5},
+            {"nombre": "Semiótica II", "creditos": 6}
+        ],
+        "7mo-8vo Semestre - Orientación: Audiovisual, Fotografía y Multimedia": [
+            {"nombre": "Dirección de Arte I", "creditos": 8},
+            {"nombre": "Fotografía Especializada I", "creditos": 8},
+            {"nombre": "Multimedia I", "creditos": 8},
+            {"nombre": "Dirección de Arte II", "creditos": 8},
+            {"nombre": "Fotografía Especializada II", "creditos": 8},
+            {"nombre": "Multimedia II", "creditos": 8},
+            {"nombre": "Teoría e Historia de los Sistemas Audiovisuales", "creditos": 4},
+            {"nombre": "Teoría e Historia de la Fotografía", "creditos": 4},
+            {"nombre": "Fotografía Digital I", "creditos": 4},
+            {"nombre": "Fotografía Experimental", "creditos": 4},
+            {"nombre": "Iluminación Fotográfica I", "creditos": 4},
+            {"nombre": "Producción Audiovisual III", "creditos": 4},
+            {"nombre": "Animación", "creditos": 4},
+            {"nombre": "Animación Digital", "creditos": 4},
+            {"nombre": "Fotografía Digital II", "creditos": 4},
+            {"nombre": "Fotografía Experimental / Procesos Antiguos", "creditos": 4},
+            {"nombre": "Iluminación Fotográfica II", "creditos": 4},
+            {"nombre": "Producción Audiovisual IV", "creditos": 4}
+        ],
+        "7mo-8vo Semestre - Orientación: Diseño Editorial e Ilustración": [
+            {"nombre": "Laboratorio de Diseño Editorial III", "creditos": 8},
+            {"nombre": "Autoedición I", "creditos": 8},
+            {"nombre": "Ilustración I", "creditos": 8},
+            {"nombre": "Laboratorio de Diseño Editorial IV", "creditos": 8},
+            {"nombre": "Autoedición II", "creditos": 8},
+            {"nombre": "Ilustración II", "creditos": 8},
+            {"nombre": "Teoría e Historia del Diseño Editorial", "creditos": 4},
+            {"nombre": "Teoría e Historia de la Ilustración", "creditos": 4},
+            {"nombre": "Dibujo V", "creditos": 4},
+            {"nombre": "Ilustración Digital I", "creditos": 4},
+            {"nombre": "Sistemas de Impresión Editorial I", "creditos": 4},
+            {"nombre": "Caricatura", "creditos": 4},
+            {"nombre": "Publicidad", "creditos": 4},
+            {"nombre": "Relaciones Públicas", "creditos": 4},
+            {"nombre": "Dibujo VI", "creditos": 4},
+            {"nombre": "Ilustración Digital II", "creditos": 4},
+            {"nombre": "Sistemas de Impresión Editorial II", "creditos": 4},
+            {"nombre": "Historieta", "creditos": 4}
+        ],
+        "7mo-8vo Semestre - Orientación: Simbología y Diseño en Soportes Tridimensionales": [
+            {"nombre": "Diseño VII", "creditos": 8},
+            {"nombre": "Diseño Digital I", "creditos": 8},
+            {"nombre": "Envase y Embalaje I", "creditos": 8},
+            {"nombre": "Diseño VIII", "creditos": 8},
+            {"nombre": "Diseño Digital II", "creditos": 8},
+            {"nombre": "Envase y Embalaje II", "creditos": 8},
+            {"nombre": "Teoría e Historia del Diseño", "creditos": 4},
+            {"nombre": "Taller de Serigrafía I", "creditos": 4},
+            {"nombre": "Estrategia de Medios I", "creditos": 4},
+            {"nombre": "Ingeniería con Papel I", "creditos": 4},
+            {"nombre": "Ilustración Tridimensional I", "creditos": 4},
+            {"nombre": "Teoría del Conocimiento Visual I", "creditos": 4},
+            {"nombre": "Relaciones Humanas", "creditos": 4},
+            {"nombre": "Taller de Serigrafía II", "creditos": 4},
+            {"nombre": "Estrategia de Medios II", "creditos": 4},
+            {"nombre": "Ingeniería con Papel II", "creditos": 4},
+            {"nombre": "Ilustración Tridimensional II", "creditos": 4},
+            {"nombre": "Teoría del Conocimiento Visual II", "creditos": 4}
+        ],
+        "Optativas Comunes a las Orientaciones": [
+            {"nombre": "Procesos de Comunicación I", "creditos": 4},
+            {"nombre": "Psicología para la Comunicación Visual I", "creditos": 4},
+            {"nombre": "Régimen Legal de la Comunicación Visual I", "creditos": 4},
+            {"nombre": "Hermenéutica y Comunicación Visual", "creditos": 4},
+            {"nombre": "Procesos de Comunicación II", "creditos": 4},
+            {"nombre": "Psicología para la Comunicación Visual II", "creditos": 4},
+            {"nombre": "Régimen Legal de la Comunicación Visual II", "creditos": 4}
+        ],
+        "9no Semestre": [
+            {"nombre": "Ética para la Comunicación Visual", "creditos": 0},
+            {"nombre": "Seminario Integral de Investigación Profesional", "creditos": 22}
+        ],
+        "Asignaturas Extracurriculares": [
+            {"nombre": "Redacción y Análisis de Textos I", "creditos": 0},
+            {"nombre": "Ética para la Comunicación Visual", "creditos": 0},
+            {"nombre": "Redacción y Análisis de Textos II", "creditos": 0}
+        ]
+    },
+
+    # Fuente: https://escolar1.unam.mx/planes/fes_cuautli/ing_industrial.pdf (aprobado 17/jun/2011).
+    # El 9no semestre combina 1 materia fija + 1 módulo de "Obligatoria de Elección
+    # por Profundización" (elegir 1 de 5, 3 materias c/u) + 2 optativas libres.
+    "INDUSTRIAL": {
+        "1er Semestre": [
+            {"nombre": "Álgebra", "creditos": 8},
+            {"nombre": "Cálculo Diferencial e Integral", "creditos": 8},
+            {"nombre": "Computación para Ingeniería", "creditos": 8},
+            {"nombre": "Geometría Analítica", "creditos": 8},
+            {"nombre": "Química", "creditos": 8},
+            {"nombre": "Comunicación Oral y Escrita", "creditos": 6}
+        ],
+        "2do Semestre": [
+            {"nombre": "Álgebra Lineal", "creditos": 6},
+            {"nombre": "Cálculo Vectorial", "creditos": 8},
+            {"nombre": "Dibujo", "creditos": 4},
+            {"nombre": "Estática", "creditos": 8},
+            {"nombre": "Introducción a la Tecnología de Materiales", "creditos": 10},
+            {"nombre": "Termodinámica", "creditos": 10}
+        ],
+        "3er Semestre": [
+            {"nombre": "Ecuaciones Diferenciales", "creditos": 6},
+            {"nombre": "Cinemática y Dinámica", "creditos": 10},
+            {"nombre": "Electricidad y Magnetismo", "creditos": 10},
+            {"nombre": "Ética y Liderazgo", "creditos": 6},
+            {"nombre": "Programación Aplicada a la Ingeniería", "creditos": 8},
+            {"nombre": "Estudio del Trabajo", "creditos": 10}
+        ],
+        "4to Semestre": [
+            {"nombre": "Fundamentos de Mecánica de Sólidos", "creditos": 8},
+            {"nombre": "Ingeniería Eléctrica Industrial", "creditos": 8},
+            {"nombre": "Ingeniería y Productividad", "creditos": 8},
+            {"nombre": "Psicología Industrial", "creditos": 6},
+            {"nombre": "Termofluidos", "creditos": 10},
+            {"nombre": "Probabilidad y Estadística", "creditos": 8}
+        ],
+        "5to Semestre": [
+            {"nombre": "Electrónica Industrial", "creditos": 10},
+            {"nombre": "Procesos de Manufactura", "creditos": 10},
+            {"nombre": "Técnicas de Evaluación Económica", "creditos": 8},
+            {"nombre": "Diseño de Elementos de Máquinas", "creditos": 8},
+            {"nombre": "Procesos Industriales", "creditos": 8}
+        ],
+        "6to Semestre": [
+            {"nombre": "Seguridad e Higiene Industrial", "creditos": 6},
+            {"nombre": "Máquinas Eléctricas", "creditos": 10},
+            {"nombre": "Diseño de Sistemas Productivos", "creditos": 8},
+            {"nombre": "Diseño y Manufactura por Computadora", "creditos": 10},
+            {"nombre": "Estadística Avanzada Industrial", "creditos": 8}
+        ],
+        "7mo Semestre": [
+            {"nombre": "Aspectos Básicos en el Desarrollo Empresarial", "creditos": 6},
+            {"nombre": "Gestión de Empresas", "creditos": 8},
+            {"nombre": "Instalaciones Electromecánicas", "creditos": 10},
+            {"nombre": "Investigación de Operaciones I", "creditos": 8},
+            {"nombre": "Planeación y Control de la Producción", "creditos": 10}
+        ],
+        "8vo Semestre": [
+            {"nombre": "Cadena de Suministro", "creditos": 8},
+            {"nombre": "Elaboración y Evaluación de Proyectos", "creditos": 8},
+            {"nombre": "Relaciones Laborales y Comportamiento Humano", "creditos": 6},
+            {"nombre": "Ingeniería Ecológica", "creditos": 8},
+            {"nombre": "Automatización y Robótica", "creditos": 10}
+        ],
+        "9no Semestre": [
+            {"nombre": "Manufactura Esbelta", "creditos": 8}
+        ],
+        "9no Semestre - Módulo: Mantenimiento": [
+            {"nombre": "Administración del Mantenimiento", "creditos": 8},
+            {"nombre": "Cambio Rápido de Herramientas (SMED)", "creditos": 8},
+            {"nombre": "Mantenimiento Productivo Total (TPM)", "creditos": 8}
+        ],
+        "9no Semestre - Módulo: Logística": [
+            {"nombre": "Distribución y Transporte", "creditos": 8},
+            {"nombre": "Gerencia de Operaciones", "creditos": 8},
+            {"nombre": "Logística Industrial", "creditos": 8}
+        ],
+        "9no Semestre - Módulo: Calidad": [
+            {"nombre": "Análisis de Calidad con Software Estadístico", "creditos": 8},
+            {"nombre": "Gestión de Calidad", "creditos": 8},
+            {"nombre": "Métodos Estadísticos Avanzados", "creditos": 8}
+        ],
+        "9no Semestre - Módulo: Automatización Industrial": [
+            {"nombre": "Cambio Rápido de Herramientas (SMED)", "creditos": 8},
+            {"nombre": "Manufactura Integrada por Computadora", "creditos": 8},
+            {"nombre": "Sistemas de Manufactura Flexible", "creditos": 8}
+        ],
+        "9no Semestre - Módulo: Producción": [
+            {"nombre": "Desarrollo y Diseño de un Servicio", "creditos": 8},
+            {"nombre": "Ergonomía", "creditos": 8},
+            {"nombre": "Investigación de Operaciones II", "creditos": 8}
+        ],
+        "9no Semestre - Optativas": [
+            {"nombre": "Administración de Mantenimiento", "creditos": 8},
+            {"nombre": "Aplicaciones de Manufactura Esbelta", "creditos": 8},
+            {"nombre": "Automatización de Procesos Industriales", "creditos": 8},
+            {"nombre": "Comercio Internacional", "creditos": 8},
+            {"nombre": "Desarrollo de Habilidades Gerenciales", "creditos": 8},
+            {"nombre": "Desarrollo y Diseño de Servicio", "creditos": 8},
+            {"nombre": "Diseño y Desarrollo del Producto", "creditos": 8},
+            {"nombre": "Envase y Embalaje", "creditos": 8},
+            {"nombre": "Ingeniería Financiera", "creditos": 8},
+            {"nombre": "Kaizen (Mejora continua)", "creditos": 8},
+            {"nombre": "Logística Industrial", "creditos": 8},
+            {"nombre": "Sistemas de Producción Avanzados", "creditos": 8},
+            {"nombre": "Instrumentación y Control", "creditos": 8}
+        ]
+    },
+
+    # Fuente: https://escolar1.unam.mx/planes/fes_cuautli/Inform-Cuau.pdf (actualizado 28/sep/2012).
+    # 5to, 6to y 7mo semestre eligen 1 optativa cada uno de la misma lista compartida;
+    # 8vo y 9no eligen 3 "optativas de elección" cada uno de otra lista compartida.
+    "INFORMATICA": {
+        "1er Semestre": [
+            {"nombre": "Administración I. Proceso Administrativo", "creditos": 6},
+            {"nombre": "Comunicación Oral y Escrita", "creditos": 6},
+            {"nombre": "Informática I. Introducción a la Informática", "creditos": 12},
+            {"nombre": "Programación I. Introducción a la Programación y Ambientes Integrados", "creditos": 8},
+            {"nombre": "Taller de Componentes de Hardware", "creditos": 3},
+            {"nombre": "Análisis y Diseño de Algoritmos", "creditos": 8},
+            {"nombre": "Matemáticas I. Matemáticas Básicas", "creditos": 8}
+        ],
+        "2do Semestre": [
+            {"nombre": "Contabilidad", "creditos": 8},
+            {"nombre": "Administración II. Estructuras Administrativas", "creditos": 6},
+            {"nombre": "Informática II. Organización de Archivos y Estructura de Datos", "creditos": 12},
+            {"nombre": "Programación II. Programación Avanzada", "creditos": 8},
+            {"nombre": "Arquitectura de Computadoras", "creditos": 8},
+            {"nombre": "Matemáticas II. Lógica Matemática", "creditos": 8}
+        ],
+        "3er Semestre": [
+            {"nombre": "Derecho Informático", "creditos": 8},
+            {"nombre": "Metodología de la Investigación", "creditos": 8},
+            {"nombre": "Informática III. Análisis y Diseño de Sistemas I", "creditos": 12},
+            {"nombre": "Programación III. Programación Visual", "creditos": 8},
+            {"nombre": "Sistemas Operativos", "creditos": 8},
+            {"nombre": "Matemáticas III. Matemáticas Financieras", "creditos": 8}
+        ],
+        "4to Semestre": [
+            {"nombre": "Contabilidad de Costos", "creditos": 8},
+            {"nombre": "Mercadotecnia", "creditos": 6},
+            {"nombre": "Informática IV. Análisis y Diseño de Sistemas II", "creditos": 12},
+            {"nombre": "Programación IV. Programación de Interfaces", "creditos": 12},
+            {"nombre": "Redes de Computadoras I", "creditos": 8},
+            {"nombre": "Matemáticas IV. Matemáticas Computacionales", "creditos": 8}
+        ],
+        "5to Semestre": [
+            {"nombre": "Finanzas", "creditos": 8},
+            {"nombre": "Administración de Centros de Cómputo", "creditos": 8},
+            {"nombre": "Informática V. Industria del Software", "creditos": 12},
+            {"nombre": "Introducción a las Bases de Datos", "creditos": 10},
+            {"nombre": "Matemáticas V. Estadística", "creditos": 10}
+        ],
+        "6to Semestre": [
+            {"nombre": "Evaluación de Proyectos", "creditos": 8},
+            {"nombre": "Economía", "creditos": 8},
+            {"nombre": "Informática VI. Tópicos Selectos de Informática", "creditos": 12},
+            {"nombre": "Desarrollo de Aplicaciones de Base de Datos", "creditos": 10},
+            {"nombre": "Redes de Computadoras II", "creditos": 8}
+        ],
+        "7mo Semestre": [
+            {"nombre": "Análisis y Toma de Decisiones", "creditos": 6},
+            {"nombre": "Seminario de Investigación", "creditos": 8},
+            {"nombre": "Seguridad Informática", "creditos": 8},
+            {"nombre": "Laboratorio de Sistemas de Información", "creditos": 8},
+            {"nombre": "Matemáticas VI. Investigación de Operaciones", "creditos": 8}
+        ],
+        "8vo Semestre": [
+            {"nombre": "Auditoría en Informática", "creditos": 8},
+            {"nombre": "Ética y Desarrollo Profesional", "creditos": 6}
+        ],
+        "9no Semestre": [
+            {"nombre": "Administración Pública y Política Informática", "creditos": 6}
+        ],
+        "Optativas (5to, 6to y 7mo Semestre)": [
+            {"nombre": "Seminario de Multimedia I", "creditos": 8},
+            {"nombre": "Seminario de Proceso Distribuido I", "creditos": 8},
+            {"nombre": "Seminario de Sistemas Operativos para Redes I", "creditos": 8},
+            {"nombre": "Seminario de Normas y Estándares I", "creditos": 8},
+            {"nombre": "Seminario de Administración de Recursos Humanos en Informática I", "creditos": 8},
+            {"nombre": "Seminario de Programación en Internet I", "creditos": 8},
+            {"nombre": "Seminario de Multimedia II", "creditos": 8},
+            {"nombre": "Seminario de Proceso Distribuido II", "creditos": 8},
+            {"nombre": "Seminario de Sistemas Operativos para Redes II", "creditos": 8},
+            {"nombre": "Seminario de Comercio Electrónico II", "creditos": 8},
+            {"nombre": "Seminario de Normas y Estándares II", "creditos": 8},
+            {"nombre": "Seminario de Administración de Recursos Humanos en Informática II", "creditos": 8},
+            {"nombre": "Seminario de Programación en Internet II", "creditos": 8},
+            {"nombre": "Seminario de Inteligencia Artificial II", "creditos": 8},
+            {"nombre": "Administración Internacional Comparada", "creditos": 6},
+            {"nombre": "Análisis Financieros Matemáticos con Sistemas Electrónicos", "creditos": 8},
+            {"nombre": "Análisis Matemáticos Aplicados a la Administración", "creditos": 8},
+            {"nombre": "Comercio Exterior I", "creditos": 8},
+            {"nombre": "Contabilidades Especiales", "creditos": 8},
+            {"nombre": "Habilidades de Liderazgo Estratégico", "creditos": 8},
+            {"nombre": "Herramientas de Cómputo Avanzado", "creditos": 8},
+            {"nombre": "Inglés I", "creditos": 8},
+            {"nombre": "Inglés II", "creditos": 8},
+            {"nombre": "Inteligencia de Negocios", "creditos": 6},
+            {"nombre": "Seminario de Titulación", "creditos": 0},
+            {"nombre": "Simulación de Negocios", "creditos": 8},
+            {"nombre": "Sistemas Informáticos Aplicados a la Producción", "creditos": 6}
+        ],
+        "Optativas de Elección (8vo y 9no Semestre)": [
+            {"nombre": "Seminario de Desarrollo de Aplicaciones Web I", "creditos": 8},
+            {"nombre": "Seminario de Desarrollo de Aplicaciones Web II", "creditos": 8},
+            {"nombre": "Seminario de Administración de Servicios de TI", "creditos": 8},
+            {"nombre": "Seminario de Análisis y Extracción de Conocimientos de Base de Datos", "creditos": 8},
+            {"nombre": "Seminario de Base de Datos Avanzadas", "creditos": 8},
+            {"nombre": "Seminario de Desarrollo de Aplicaciones para Dispositivos Móviles", "creditos": 8},
+            {"nombre": "Seminario de Ecuaciones Diferenciales I", "creditos": 8},
+            {"nombre": "Seminario de Ecuaciones Diferenciales II", "creditos": 8},
+            {"nombre": "Seminario de Inferencia Estadística con uso de Software", "creditos": 8},
+            {"nombre": "Seminario de Minería de Datos", "creditos": 8},
+            {"nombre": "Seminario de Sistemas Informáticos para la Inteligencia de Negocios", "creditos": 8},
+            {"nombre": "Seminario de Técnicas Estadísticas Avanzadas para la Toma de Decisiones I", "creditos": 8},
+            {"nombre": "Seminario de Técnicas Estadísticas Avanzadas para la Toma de Decisiones II", "creditos": 8},
+            {"nombre": "Seminario de Comercio Electrónico", "creditos": 8},
+            {"nombre": "Seminario de Graficación por Computadora", "creditos": 8},
+            {"nombre": "Seminario de Graficación por Computadora II", "creditos": 8},
+            {"nombre": "Seminario de Inteligencia Artificial I", "creditos": 8},
+            {"nombre": "Seminario de Inteligencia Artificial II", "creditos": 8},
+            {"nombre": "Seminario de Redes de Computadoras I", "creditos": 8},
+            {"nombre": "Seminario de Redes de Computadoras II", "creditos": 8},
+            {"nombre": "Seminario de Sistemas Expertos I", "creditos": 8},
+            {"nombre": "Seminario de Sistemas Expertos II", "creditos": 8}
+        ]
+    },
+
+    # Fuentes: https://escolar1.unam.mx/planes/fes_cuautli/Ing-agricola_cuautitlan.pdf
+    # y https://oferta.unam.mx/planestudios/ingagri-cuautitlan-planestudios13.pdf
+    # (desglosa Orientaciones y Paquetes Terminales). Es la carrera más compleja de
+    # las 9: del 7mo al 10mo semestre el alumno combina 1 de 3 Orientaciones + 1 de
+    # 4 Paquetes Terminales (elecciones independientes entre sí, no moduladas por el
+    # sistema — se listan todas como disponibles). El "Área Libre" (3er y 5to
+    # semestre) son materias de otras carreras de la FESC, incluidas tal cual las
+    # da el documento fuente.
+    "AGRICOLA": {
+        "1er Semestre": [
+            {"nombre": "Matemáticas I", "creditos": 9},
+            {"nombre": "Física I", "creditos": 8},
+            {"nombre": "Introducción a la Agricultura", "creditos": 10},
+            {"nombre": "Agrometeorología", "creditos": 8},
+            {"nombre": "Anatomía y Organografía Vegetal", "creditos": 8},
+            {"nombre": "Química I", "creditos": 4},
+            {"nombre": "Metodología de la Investigación", "creditos": 6},
+            {"nombre": "Cómputo I", "creditos": 4}
+        ],
+        "2do Semestre": [
+            {"nombre": "Matemáticas II", "creditos": 9},
+            {"nombre": "Física II", "creditos": 8},
+            {"nombre": "Botánica Económica y Sistemática", "creditos": 8},
+            {"nombre": "Seminario de Práctica de Campo I", "creditos": 2},
+            {"nombre": "Química II", "creditos": 10},
+            {"nombre": "Cómputo II", "creditos": 4},
+            {"nombre": "Antropología Social", "creditos": 6}
+        ],
+        "3er Semestre": [
+            {"nombre": "Matemáticas III", "creditos": 9},
+            {"nombre": "Bioquímica", "creditos": 8},
+            {"nombre": "Maquinaria Agrícola I", "creditos": 9},
+            {"nombre": "Administración Agropecuaria", "creditos": 6},
+            {"nombre": "Práctica de Campo I", "creditos": 2}
+        ],
+        "4to Semestre": [
+            {"nombre": "Diseños Experimentales Agrícolas", "creditos": 6},
+            {"nombre": "Edafología", "creditos": 10},
+            {"nombre": "Agroecología", "creditos": 8},
+            {"nombre": "Fisiología Vegetal", "creditos": 8},
+            {"nombre": "Genética", "creditos": 6},
+            {"nombre": "Seminario de Práctica de Campo II", "creditos": 2},
+            {"nombre": "Economía General", "creditos": 6}
+        ],
+        "5to Semestre": [
+            {"nombre": "Técnicas de Mejoramiento Genético", "creditos": 6},
+            {"nombre": "Hidráulica", "creditos": 8},
+            {"nombre": "Topografía", "creditos": 9},
+            {"nombre": "Maquinaria Agrícola II", "creditos": 9},
+            {"nombre": "Entomología", "creditos": 9},
+            {"nombre": "Práctica de Campo II", "creditos": 2},
+            {"nombre": "Economía Agrícola", "creditos": 6}
+        ],
+        "6to Semestre": [
+            {"nombre": "Uso y Manejo del Agua", "creditos": 8},
+            {"nombre": "Fertilidad y Manejo de Suelos", "creditos": 8},
+            {"nombre": "Dasonomía", "creditos": 8},
+            {"nombre": "Fitopatología", "creditos": 9},
+            {"nombre": "Control de la Maleza", "creditos": 9},
+            {"nombre": "Seminario de Práctica de Campo III", "creditos": 2},
+            {"nombre": "Derecho Agrario", "creditos": 6},
+            {"nombre": "Percepción Remota Aplicada a la Agricultura", "creditos": 4}
+        ],
+        "7mo Semestre": [
+            {"nombre": "Producción de Granos y Oleaginosas", "creditos": 9},
+            {"nombre": "Producción de Hortalizas", "creditos": 9},
+            {"nombre": "Práctica de Campo III", "creditos": 2}
+        ],
+        "8vo Semestre": [
+            {"nombre": "Producción de Forrajes y Manejo de Pastizales", "creditos": 9},
+            {"nombre": "Producción de Frutales", "creditos": 9},
+            {"nombre": "Financiamiento Agropecuario", "creditos": 6}
+        ],
+        "9no Semestre": [
+            {"nombre": "Formulación y Evaluación de Proyectos", "creditos": 6},
+            {"nombre": "Práctica de Campo IV", "creditos": 2}
+        ],
+        "10mo Semestre": [
+            {"nombre": "Comercialización de Productos Agrícolas", "creditos": 8},
+            {"nombre": "Seminario de Tesis", "creditos": 6},
+            {"nombre": "Práctica de Campo V", "creditos": 2}
+        ],
+        "Orientación: Agroecosistemas": [
+            {"nombre": "Fisiotecnia", "creditos": 8},
+            {"nombre": "Agricultura en Zonas Templadas", "creditos": 8},
+            {"nombre": "Agricultura en Zonas Áridas", "creditos": 8},
+            {"nombre": "Agricultura en Zonas Tropicales y Subtropicales", "creditos": 8},
+            {"nombre": "Sistemas de Producción Forzada", "creditos": 8},
+            {"nombre": "Impacto Ambiental", "creditos": 6},
+            {"nombre": "Análisis de Sistemas Agrícolas", "creditos": 6}
+        ],
+        "Orientación: Tecnología Agrícola": [
+            {"nombre": "Mecánica", "creditos": 8},
+            {"nombre": "Manejo Poscosecha", "creditos": 8},
+            {"nombre": "Mecanización Agrícola", "creditos": 10},
+            {"nombre": "Dibujo", "creditos": 6},
+            {"nombre": "Máquinas y Mecanismos", "creditos": 8},
+            {"nombre": "Operación de Obras Hidráulicas", "creditos": 6},
+            {"nombre": "Diseño", "creditos": 6}
+        ],
+        "Orientación: Desarrollo Rural": [
+            {"nombre": "Organización Agraria", "creditos": 8},
+            {"nombre": "Inferencia Estadística", "creditos": 8},
+            {"nombre": "Planeación Agropecuaria", "creditos": 8},
+            {"nombre": "Ingeniería Económica", "creditos": 6},
+            {"nombre": "Desarrollo Rural", "creditos": 6},
+            {"nombre": "Geografía Económica", "creditos": 8},
+            {"nombre": "Planeación Estratégica", "creditos": 8}
+        ],
+        "Paquete Terminal: Producción": [
+            {"nombre": "Propagación de Plantas", "creditos": 6},
+            {"nombre": "Horticultura Avanzada", "creditos": 8},
+            {"nombre": "Fruticultura Avanzada", "creditos": 8},
+            {"nombre": "Producción y Tecnología de Semillas", "creditos": 8}
+        ],
+        "Paquete Terminal: Biotecnología": [
+            {"nombre": "Cultivo de Tejidos Vegetales", "creditos": 8},
+            {"nombre": "Micropropagación", "creditos": 8},
+            {"nombre": "Biología Molecular", "creditos": 8},
+            {"nombre": "Transformación Génica de Plantas", "creditos": 6}
+        ],
+        "Paquete Terminal: Cultivos Forzados": [
+            {"nombre": "Plasticultura", "creditos": 6},
+            {"nombre": "Tecnología en Sistemas Forzados", "creditos": 8},
+            {"nombre": "Invernaderos", "creditos": 8},
+            {"nombre": "Arboricultura", "creditos": 8}
+        ],
+        "Paquete Terminal: Transferencia de Tecnología": [
+            {"nombre": "Procesos de la Comunicación", "creditos": 8},
+            {"nombre": "Teorías del Desarrollo", "creditos": 8},
+            {"nombre": "Promoción Agrícola", "creditos": 6},
+            {"nombre": "Innovación y Desarrollo Tecnológico", "creditos": 8}
+        ],
+        "Área Libre (3er y 5to Semestre)": [
+            {"nombre": "Introducción a la Informática (Área Libre)", "creditos": 8},
+            {"nombre": "Análisis y Diseño de Estructuras Administrativas (Área Libre)", "creditos": 8},
+            {"nombre": "Sistemas de Información (Área Libre)", "creditos": 8},
+            {"nombre": "Problemas Económicos de México (Área Libre)", "creditos": 8},
+            {"nombre": "Análisis y Diseño de Procedimientos Administrativos (Área Libre)", "creditos": 8},
+            {"nombre": "Economía y la Empresa (Área Libre)", "creditos": 8},
+            {"nombre": "Comportamiento Humano de las Organizaciones (Área Libre)", "creditos": 8},
+            {"nombre": "Comunicación Oral y Escrita (Área Libre)", "creditos": 6},
+            {"nombre": "Electricidad y Magnetismo (Área Libre)", "creditos": 11},
+            {"nombre": "Introducción a la Tecnología de Materiales (Área Libre)", "creditos": 10},
+            {"nombre": "Termofluidos (Área Libre)", "creditos": 10},
+            {"nombre": "Recursos y Necesidades de México (Área Libre)", "creditos": 6},
+            {"nombre": "Gestión de Empresas (Área Libre)", "creditos": 8},
+            {"nombre": "Planeación (Área Libre)", "creditos": 8},
+            {"nombre": "Diseño de Equipo (Área Libre)", "creditos": 6},
+            {"nombre": "Relaciones Humanas (Área Libre)", "creditos": 6},
+            {"nombre": "Bromatología (Área Libre)", "creditos": 12},
+            {"nombre": "Apicultura (Área Libre)", "creditos": 4},
+            {"nombre": "Exterior y Manejo de los Animales (Área Libre)", "creditos": 5},
+            {"nombre": "Zootecnia General (Área Libre)", "creditos": 8},
+            {"nombre": "Relaciones Laborales (Área Libre)", "creditos": 8},
+            {"nombre": "Dirección de Empresas (Área Libre)", "creditos": 6},
+            {"nombre": "Tecnología de Materiales (Área Libre)", "creditos": 6},
+            {"nombre": "Química Ambiental I (Área Libre)", "creditos": 6},
+            {"nombre": "Planeación y Desarrollo Industrial (Área Libre)", "creditos": 6},
+            {"nombre": "Seguridad e Higiene Industrial (Área Libre)", "creditos": 6},
+            {"nombre": "Tratamiento de Aguas (Área Libre)", "creditos": 8},
+            {"nombre": "Desarrollo de la Personalidad Profesional (Área Libre)", "creditos": 7},
+            {"nombre": "Administración y Estrategias de Producción (Área Libre)", "creditos": 7},
+            {"nombre": "Administración por Objetivos (Área Libre)", "creditos": 7},
+            {"nombre": "Contaminación de Suelos (Área Libre)", "creditos": 7},
+            {"nombre": "Temas Selectos de los Problemas de la Civilización Contemporánea (Área Libre)", "creditos": 8},
+            {"nombre": "Teoría de la Dialéctica y la Retórica (Área Libre)", "creditos": 2}
+        ]
+    },
+
+    # Fuente: https://escolar1.unam.mx/planes/fes_cuautli/MVZ-Cuau.pdf (aprobado 10/dic/2007).
+    # Tiene dos bancos de optativas compartidos entre varios semestres ("Básicas" en
+    # 2do/4to/6to y "de Profundización" en 6to a 10mo), más dos bolsas de 9no y 10mo
+    # semestre donde se eligen 5 de 9 y 5 de 8 materias respectivamente.
+    "MVZ": {
+        "1er Semestre": [
+            {"nombre": "Anatomía Veterinaria Básica", "creditos": 12},
+            {"nombre": "Bioestadística", "creditos": 6},
+            {"nombre": "Bioquímica", "creditos": 13},
+            {"nombre": "Exterior y Manejo de los Animales", "creditos": 5},
+            {"nombre": "Fisicoquímica Fisiológica", "creditos": 4}
+        ],
+        "2do Semestre": [
+            {"nombre": "Alimentos y Forrajes", "creditos": 10},
+            {"nombre": "Biología Celular", "creditos": 8},
+            {"nombre": "Etología", "creditos": 5},
+            {"nombre": "Introducción a la Zootecnia", "creditos": 8},
+            {"nombre": "Fisiología General", "creditos": 10}
+        ],
+        "3er Semestre": [
+            {"nombre": "Bacteriología y Micología", "creditos": 14},
+            {"nombre": "Biología del Desarrollo e Histología Veterinaria", "creditos": 14},
+            {"nombre": "Ética de la Práctica Profesional del MVZ", "creditos": 4},
+            {"nombre": "Fisiología Veterinaria", "creditos": 16}
+        ],
+        "4to Semestre": [
+            {"nombre": "Economía Zootécnica", "creditos": 7},
+            {"nombre": "Genética", "creditos": 12},
+            {"nombre": "Nutrición Animal", "creditos": 6},
+            {"nombre": "Parasitología", "creditos": 10},
+            {"nombre": "Virología", "creditos": 6}
+        ],
+        "5to Semestre": [
+            {"nombre": "Alimentación Animal", "creditos": 6},
+            {"nombre": "Anatomía Veterinaria Aplicada", "creditos": 10},
+            {"nombre": "Bienestar Animal", "creditos": 6},
+            {"nombre": "Inmunología", "creditos": 8},
+            {"nombre": "Inocuidad de los Alimentos de Origen Pecuario", "creditos": 8}
+        ],
+        "6to Semestre": [
+            {"nombre": "Patología General", "creditos": 12},
+            {"nombre": "Epidemiología", "creditos": 6},
+            {"nombre": "Propedéutica Clínica Veterinaria", "creditos": 6},
+            {"nombre": "Taller de Control de Calidad de Alimentos de Origen Pecuario", "creditos": 4}
+        ],
+        "7mo Semestre": [
+            {"nombre": "Salubridad Pública Veterinaria", "creditos": 8},
+            {"nombre": "Patología Sistémica", "creditos": 16},
+            {"nombre": "Farmacología, Toxicología y Terapéutica Médico Veterinaria", "creditos": 16}
+        ],
+        "8vo Semestre": [
+            {"nombre": "Reproducción Animal", "creditos": 10},
+            {"nombre": "Enfermedades Infecciosas I", "creditos": 10},
+            {"nombre": "Patología Clínica", "creditos": 8},
+            {"nombre": "Técnica Quirúrgica", "creditos": 6}
+        ],
+        "9no Semestre - Zootécnicas (elegir 5 de 9)": [
+            {"nombre": "Fauna Silvestre I", "creditos": 5},
+            {"nombre": "Zootecnia Caprina", "creditos": 5},
+            {"nombre": "Zootecnia Canina y Felina", "creditos": 5},
+            {"nombre": "Zootecnia de Bovinos Productores de Carne", "creditos": 5},
+            {"nombre": "Zootecnia Bovinos Productores de Leche", "creditos": 5},
+            {"nombre": "Zootecnia de las Aves", "creditos": 5},
+            {"nombre": "Zootecnia Equina", "creditos": 5},
+            {"nombre": "Zootecnia Ovina", "creditos": 5},
+            {"nombre": "Zootecnia Porcina", "creditos": 5}
+        ],
+        "10mo Semestre - Clínicas (elegir 5 de 8)": [
+            {"nombre": "Clínica Bovina", "creditos": 5},
+            {"nombre": "Clínica Canina y Felina", "creditos": 5},
+            {"nombre": "Clínica Caprina", "creditos": 5},
+            {"nombre": "Clínica de Aves", "creditos": 5},
+            {"nombre": "Clínica Equina", "creditos": 5},
+            {"nombre": "Clínica Ovina", "creditos": 5},
+            {"nombre": "Clínica Porcina", "creditos": 5},
+            {"nombre": "Fauna Silvestre II", "creditos": 5}
+        ],
+        "Optativas de Elección Básicas (2do, 4to y 6to Semestre)": [
+            {"nombre": "Administración Pública Veterinaria", "creditos": 4},
+            {"nombre": "Comprensión de Lectura en Lengua Inglesa", "creditos": 8},
+            {"nombre": "Comprensión de Lectura en Lengua Francesa", "creditos": 8},
+            {"nombre": "Desarrollo Sustentable", "creditos": 4},
+            {"nombre": "Estadística No Paramétrica", "creditos": 4},
+            {"nombre": "Geografía Económica", "creditos": 4},
+            {"nombre": "Introducción al Diseño Experimental", "creditos": 4},
+            {"nombre": "Legislación Veterinaria", "creditos": 4},
+            {"nombre": "Metodología de la Investigación Científica", "creditos": 4},
+            {"nombre": "Peritaje Zootécnico", "creditos": 4},
+            {"nombre": "Razas de Perros y Gatos", "creditos": 4},
+            {"nombre": "Sociología Rural y Urbana", "creditos": 4}
+        ],
+        "Optativas de Elección de Profundización (6to a 10mo Semestre)": [
+            {"nombre": "Administración de Empresas Agropecuarias", "creditos": 6},
+            {"nombre": "Análisis de Factibilidad Económica", "creditos": 4},
+            {"nombre": "Apicultura", "creditos": 6},
+            {"nombre": "Bioinformática para MVZ", "creditos": 6},
+            {"nombre": "Cunicultura", "creditos": 6},
+            {"nombre": "Enfermedades Infecciosas II", "creditos": 8},
+            {"nombre": "Especificación de Productos de Origen Animal", "creditos": 4},
+            {"nombre": "Evaluación de los Alimentos de Consumo Animal", "creditos": 4},
+            {"nombre": "Formulación y Fabricación de Alimentos Balanceados", "creditos": 4},
+            {"nombre": "Genómica Animal", "creditos": 6},
+            {"nombre": "Imagenología", "creditos": 6},
+            {"nombre": "Laboratorio de Análisis Clínicos", "creditos": 4},
+            {"nombre": "Mejoramiento Genético Animal", "creditos": 6},
+            {"nombre": "Mercadotecnia para Veterinarios", "creditos": 4},
+            {"nombre": "Microorganismos Patógenos de Origen Pecuario", "creditos": 6},
+            {"nombre": "Piscicultura", "creditos": 6},
+            {"nombre": "Producción de Animales de Laboratorio", "creditos": 6},
+            {"nombre": "Seminario de Investigación I", "creditos": 6},
+            {"nombre": "Seminario de Investigación II", "creditos": 6},
+            {"nombre": "Seminario de Investigación III", "creditos": 6},
+            {"nombre": "Seminario de Investigación IV", "creditos": 6},
+            {"nombre": "Seminario de Titulación (Medicina Veterinaria)", "creditos": 0},
+            {"nombre": "Temas Selectos de Biología Molecular", "creditos": 6},
+            {"nombre": "Terapéutica Quirúrgica", "creditos": 4},
+            {"nombre": "Tópicos Selectos de Cirugía en Perros y Gatos", "creditos": 4}
+        ]
+    },
 }
 
 # --- BASE DE DATOS ---
@@ -403,27 +1183,45 @@ def _eliminar_columna(cur, tabla, columna):
     if columna in columnas:
         cur.execute(f"ALTER TABLE {tabla} DROP COLUMN {columna}")
 
+def _migrar_carrera_profesor_a_tabla_relacion(cur):
+    """Copia el valor único de profesores.carrera (si existe) a profesor_carreras
+    antes de eliminar esa columna, para no perder altas anteriores a un solo valor."""
+    columnas = [fila[1] for fila in cur.execute("PRAGMA table_info(profesores)").fetchall()]
+    if "carrera" not in columnas:
+        return
+    filas = cur.execute("SELECT usuario, carrera FROM profesores WHERE carrera IS NOT NULL").fetchall()
+    for usuario, carrera in filas:
+        cur.execute("INSERT OR IGNORE INTO profesor_carreras (usuario, carrera) VALUES (?,?)", (usuario, carrera))
+
 def init_db():
     con = get_db()
     cur = con.cursor()
     cur.execute('''CREATE TABLE IF NOT EXISTS alumnos
                     (cuenta TEXT PRIMARY KEY, password TEXT, nombre TEXT,
-                     password_temporal INTEGER DEFAULT 0, carrera TEXT DEFAULT 'ITSE')''')
+                     password_temporal INTEGER DEFAULT 0, carrera TEXT DEFAULT 'ITSE',
+                     fecha_nacimiento TEXT)''')
     cur.execute('''CREATE TABLE IF NOT EXISTS profesores
                     (usuario TEXT PRIMARY KEY, password TEXT, nombre TEXT,
-                     password_temporal INTEGER DEFAULT 0)''')
+                     password_temporal INTEGER DEFAULT 0, fecha_nacimiento TEXT)''')
     cur.execute('''CREATE TABLE IF NOT EXISTS administradores
                     (usuario TEXT PRIMARY KEY, password TEXT, nombre TEXT)''')
     _asegurar_columna(cur, "alumnos", "password_temporal", "INTEGER DEFAULT 0")
     _asegurar_columna(cur, "alumnos", "carrera", "TEXT DEFAULT 'ITSE'")
+    _asegurar_columna(cur, "alumnos", "fecha_nacimiento", "TEXT")
     _eliminar_columna(cur, "alumnos", "semestre")
     _asegurar_columna(cur, "profesores", "password_temporal", "INTEGER DEFAULT 0")
+    _asegurar_columna(cur, "profesores", "fecha_nacimiento", "TEXT")
     cur.execute('''CREATE TABLE IF NOT EXISTS evaluaciones
                     (cuenta TEXT, materia TEXT, estilo TEXT, recomendacion TEXT,
                      PRIMARY KEY (cuenta, materia))''')
     cur.execute('''CREATE TABLE IF NOT EXISTS inscripciones
                     (cuenta TEXT, materia TEXT,
                      PRIMARY KEY (cuenta, materia))''')
+    cur.execute('''CREATE TABLE IF NOT EXISTS profesor_carreras
+                    (usuario TEXT, carrera TEXT,
+                     PRIMARY KEY (usuario, carrera))''')
+    _migrar_carrera_profesor_a_tabla_relacion(cur)
+    _eliminar_columna(cur, "profesores", "carrera")
     cur.execute('''CREATE TABLE IF NOT EXISTS correcciones_profesor
                     (cuenta TEXT, materia TEXT, recomendacion_corregida TEXT,
                      profesor TEXT, fecha TEXT,
@@ -434,8 +1232,6 @@ def init_db():
         for cuenta, d in BASE_DE_DATOS.items():
             cur.execute("INSERT INTO alumnos (cuenta, password, nombre, carrera) VALUES (?,?,?,?)",
                         (cuenta, generate_password_hash(d["password"]), d["nombre"], d.get("carrera", "ITSE")))
-    if not cur.execute("SELECT 1 FROM profesores LIMIT 1").fetchone():
-        cur.execute("INSERT INTO profesores (usuario, password, nombre) VALUES (?,?,?)", ("Profe01", generate_password_hash("456"), "Prof. García"))
     if not cur.execute("SELECT 1 FROM administradores LIMIT 1").fetchone():
         cur.execute("INSERT INTO administradores VALUES (?,?,?)", ("admin", generate_password_hash("admin"), "Administración FESC"))
 
@@ -514,6 +1310,12 @@ def obtener_materias_inscritas(cuenta):
     filas = cursor.fetchall()
     conexion.close()
     return [fila[0] for fila in filas]
+
+def obtener_carreras_profesor(usuario):
+    con = get_db()
+    filas = con.execute("SELECT carrera FROM profesor_carreras WHERE usuario=?", (usuario,)).fetchall()
+    con.close()
+    return [f["carrera"] for f in filas]
 
 _CAPTCHA_CARACTERES = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 _CAPTCHA_LONGITUD = 5
@@ -1153,10 +1955,19 @@ def admin_profesores():
     if "admin" not in session:
         return redirect(url_for("admin_login"))
     nombre_admin = get_admin(session["admin"])["nombre"]
+    todos_profesores = get_todos_profesores()
+    carreras_por_profesor = {usuario: obtener_carreras_profesor(usuario) for usuario in todos_profesores}
+    nombres_carreras_por_profesor = {
+        usuario: ", ".join(CARRERAS[c] for c in lista)
+        for usuario, lista in carreras_por_profesor.items()
+    }
     return render_template("admin_profesores.html",
                            admin=nombre_admin,
                            admin_activo=session["admin"],
-                           profesores=get_todos_profesores())
+                           profesores=todos_profesores,
+                           carreras=CARRERAS,
+                           carreras_por_profesor=carreras_por_profesor,
+                           nombres_carreras_por_profesor=nombres_carreras_por_profesor)
 
 @app.route("/admin/administradores")
 def admin_administradores():
@@ -1176,10 +1987,11 @@ def admin_agregar_alumno():
     nombre = request.form["nombre"].strip()
     password = request.form["password"].strip()
     carrera = request.form["carrera"].strip()
-    if cuenta and nombre and password and carrera in CARRERAS:
+    fecha_nacimiento = request.form.get("fecha_nacimiento", "").strip()
+    if cuenta and nombre and password and carrera in CARRERAS and fecha_nacimiento:
         con = get_db()
-        con.execute("INSERT OR REPLACE INTO alumnos (cuenta, password, nombre, carrera) VALUES (?,?,?,?)",
-                     (cuenta, generate_password_hash(password), nombre, carrera))
+        con.execute("INSERT OR REPLACE INTO alumnos (cuenta, password, nombre, carrera, fecha_nacimiento) VALUES (?,?,?,?,?)",
+                     (cuenta, generate_password_hash(password), nombre, carrera, fecha_nacimiento))
         con.commit()
         con.close()
     return redirect(url_for("admin_alumnos"))
@@ -1191,10 +2003,15 @@ def admin_agregar_profesor():
     usuario = request.form["usuario"].strip()
     nombre = request.form["nombre"].strip()
     password = request.form["password"].strip()
-    if usuario and nombre and password:
+    fecha_nacimiento = request.form.get("fecha_nacimiento", "").strip()
+    carreras_validas = [c for c in request.form.getlist("carreras") if c in CARRERAS]
+    if usuario and nombre and password and fecha_nacimiento and carreras_validas:
         con = get_db()
-        con.execute("INSERT OR REPLACE INTO profesores (usuario, password, nombre) VALUES (?,?,?)",
-                     (usuario, generate_password_hash(password), nombre))
+        con.execute("INSERT OR REPLACE INTO profesores (usuario, password, nombre, fecha_nacimiento) VALUES (?,?,?,?)",
+                     (usuario, generate_password_hash(password), nombre, fecha_nacimiento))
+        con.execute("DELETE FROM profesor_carreras WHERE usuario=?", (usuario,))
+        for carrera in carreras_validas:
+            con.execute("INSERT INTO profesor_carreras (usuario, carrera) VALUES (?,?)", (usuario, carrera))
         con.commit()
         con.close()
     return redirect(url_for("admin_profesores"))
@@ -1224,6 +2041,7 @@ def admin_eliminar_profesor():
     if usuario:
         con = get_db()
         con.execute("DELETE FROM profesores WHERE usuario=?", (usuario,))
+        con.execute("DELETE FROM profesor_carreras WHERE usuario=?", (usuario,))
         con.commit()
         con.close()
     return redirect(url_for("admin_profesores"))
