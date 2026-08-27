@@ -138,6 +138,7 @@ img{ max-width:100%; }
 .campo{ text-align:left; margin-bottom:15px; }
 .campo label{ display:block; font-size:12px; font-weight:600; color:var(--texto-sec); margin-bottom:5px; }
 .campo label .req{ color:var(--alerta); }
+.campo-ayuda{ font-size:11px; color:var(--texto-mute); margin:6px 0 0 0; }
 .input-wrap{ display:flex; border:1px solid var(--linea); border-radius:6px; overflow:hidden; position:relative; transition:.15s; }
 .input-wrap:focus-within{ border-color:var(--azul); box-shadow:0 0 0 3px rgba(11,42,74,0.08); }
 .input-wrap input{ flex:1; padding:10px 12px; border:none; outline:none; font-size:14px; font-family:inherit; min-width:0; }

@@ -12,6 +12,7 @@ import io
 import random
 import secrets
 import string
+import unicodedata
 from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFont
 
@@ -1303,6 +1304,9 @@ def get_todos_admins():
     con.close()
     return {r["usuario"]: dict(r) for r in rows}
 
+def _clave_orden_alfabetico(texto):
+    return unicodedata.normalize('NFD', texto).encode('ascii', 'ignore').decode('ascii').lower()
+
 def obtener_materias_inscritas(cuenta):
     conexion = sqlite3.connect('base_dts.db')
     cursor = conexion.cursor()
@@ -1420,7 +1424,11 @@ def materias():
     cuenta_actual = session['usuario']
     datos_alumno = get_alumno(cuenta_actual)
     datos_alumno['materias'] = obtener_materias_inscritas(cuenta_actual)
-    plan_alumno = PLANES_DE_ESTUDIO.get(datos_alumno.get('carrera'), {})
+    plan_original = PLANES_DE_ESTUDIO.get(datos_alumno.get('carrera'), {})
+    plan_alumno = {
+        semestre: sorted(lista, key=lambda m: _clave_orden_alfabetico(m['nombre']))
+        for semestre, lista in plan_original.items()
+    }
     return render_template('materias.html', alumno=datos_alumno, plan=plan_alumno)
 
 @app.route('/guardar_materias', methods=['POST'])
@@ -1531,7 +1539,7 @@ def evaluar():
         estilo_ganador = resultados['estilo_ganador']['nombre']
         cuenta_actual = session['usuario']
         
-        prompt = f"Actúa como un profesor de la FES Cuautitlán. Para un alumno que aprende de forma {estilo_ganador} en la materia '{materia_evaluada}', escribe estrictamente 3 cosas separadas por un salto de línea:\n1. Consejo: Un tip rápido.\n2. Libro: Un libro.\n3. Recurso: Un canal de YouTube.\nPor favor, NO uses asteriscos."
+        prompt = f"Actúa como un asesor académico universitario de la FES Cuautitlán, UNAM. Redacta en un tono profesional, claro y cordial, como el de un asesor académico real explicándole algo a un alumno: evita los dos extremos, ni teatral ni con apodos como 'joven', pero tampoco telegráfico o de una sola frase suelta. Cada punto debe incluir una breve explicación (1-2 oraciones) de por qué es útil para ese estilo de aprendizaje. No incluyas saludo, presentación ni despedida: tu respuesta debe iniciar directamente en '1. Consejo:'. Para un alumno que aprende de forma {estilo_ganador} en la materia '{materia_evaluada}', responde exactamente con este formato, conservando las etiquetas:\n1. Consejo: [tip explicado en 1-2 oraciones]\n2. Libro: [título y autor, con una breve razón de por qué ayuda]\n3. Recurso: [canal o sitio, con una breve razón de por qué ayuda]\nNo uses asteriscos."
         try:
             respuesta_ia = cliente_ia.models.generate_content(model='gemini-2.5-flash', contents=prompt)
             consejo_generado = respuesta_ia.text
@@ -1539,7 +1547,7 @@ def evaluar():
             consejo_generado = "1. Consejo: Haz mapas mentales.\n2. Libro: Consulta la bibliografía oficial.\n3. Recurso: Busca tutoriales en YouTube."
         
         # Generar actividades IA
-        prompt_actividades = f"Actúa como un profesor de la FES Cuautitlán. Para un alumno con estilo de aprendizaje {estilo_ganador} en la materia '{materia_evaluada}', genera exactamente 3 actividades de estudio prácticas y concretas. Escríbelas numeradas (1. 2. 3.) separadas por salto de línea. Cada actividad debe tener un título corto seguido de dos puntos y una descripción breve. NO uses asteriscos."
+        prompt_actividades = f"Actúa como un asesor académico universitario de la FES Cuautitlán, UNAM. Redacta en tono formal, profesional y directo, sin exclamaciones, sin apodos hacia el alumno (nada de 'joven' u otras muletillas) y sin ningún texto introductorio ni de cierre. Para un alumno con estilo de aprendizaje {estilo_ganador} en la materia '{materia_evaluada}', genera exactamente 3 actividades de estudio prácticas y concretas. Escríbelas numeradas (1. 2. 3.) separadas por salto de línea. Cada actividad debe tener un título corto seguido de dos puntos y una descripción breve. No uses asteriscos ni saludos ni despedidas."
         try:
             resp_act = cliente_ia.models.generate_content(model='gemini-2.5-flash', contents=prompt_actividades)
             actividades_generadas = resp_act.text

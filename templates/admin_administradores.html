@@ -31,7 +31,7 @@
 <body>
 
 <div class="top-navbar">
-    <h2>Panel administrativo · FES Cuautitlán Campo 4</h2>
+    <h2>Panel administrativo - Facultad de Estudios Superiores Cuautitlán Campo 4</h2>
     <div class="navbar-right">
         <span>{{ admin }}</span>
         <a href="/admin/logout" class="logout-btn">Cerrar sesión</a>
@@ -54,9 +54,9 @@
                 <form method="POST" action="/admin/agregar_admin">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <label>Usuario</label>
-                    <input type="text" name="usuario" required>
+                    <input type="text" name="usuario" placeholder="••••••••" required>
                     <label>Nombre completo</label>
-                    <input type="text" name="nombre" required>
+                    <input type="text" name="nombre" placeholder="••••••••" required>
                     <label>Contraseña</label>
                     <input type="password" name="password" placeholder="••••••••" required>
                     <button type="submit" class="btn-accion primario" style="width:100%; justify-content:center;">+ Agregar administrador</button>
