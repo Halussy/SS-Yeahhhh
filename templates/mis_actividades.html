@@ -20,7 +20,15 @@
         .act-card-header{ background:var(--fondo); padding:10px 18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
         .act-materia{ font-weight:600; color:var(--azul); font-size:14px; }
         .act-body{ padding:16px 18px; }
+        .act-titulo{ font-weight:600; color:var(--tinta); font-size:13px; margin:8px 0 4px; }
         .act-texto{ font-size:13px; color:var(--tinta); line-height:1.8; white-space:pre-line; }
+
+        .criterio-item{ background:#fff; border:1px solid var(--linea); border-radius:6px; padding:8px 11px; margin-top:8px; }
+        .criterio-top{ display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:12px; }
+        .criterio-nombre{ font-weight:600; color:var(--tinta); }
+        .criterio-puntaje{ font-family:var(--fuente-mono); color:var(--azul); font-weight:600; flex-shrink:0; }
+        .criterio-desc{ font-size:12px; color:var(--texto-sec); margin-top:3px; }
+        .act-explicacion{ font-size:12px; color:var(--tinta); line-height:1.7; margin-top:10px; }
 
         .tarea-card{ border-left:3px solid var(--dorado); }
         .tarea-card-header{ background:#FBF6EB; padding:10px 18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
@@ -85,11 +93,67 @@
                     <div class="act-body">
                         {% if act.actividad_corregida %}
                             <span class="tag tag-fix">Revisada por profesor</span>
+                            <div class="act-titulo">{{ act.titulo }}</div>
                             <div class="act-texto">{{ act.actividad_corregida }}</div>
                         {% else %}
                             <span class="tag tag-ia">Generada por IA</span>
+                            <div class="act-titulo">{{ act.titulo }}</div>
                             <div class="act-texto">{{ act.actividad }}</div>
                         {% endif %}
+
+                        {% set entrega = entregas_actividades.get(act.id) %}
+                        <div class="entrega-box">
+                            {% if entrega and entrega.estado == 'calificada' %}
+                                <div class="entrega-hecha">
+                                    <span class="tag tag-calificada">Calificada por IA</span>
+                                    <span class="calificacion-pill">{{ '%.0f'|format(entrega.calificacion) }}/100</span>
+                                    {% for c in entrega.criterios %}
+                                    <div class="criterio-item">
+                                        <div class="criterio-top">
+                                            <span class="criterio-nombre">{{ c.nombre }}</span>
+                                            <span class="criterio-puntaje">{{ c.puntaje_obtenido }}/{{ c.puntaje_maximo }}</span>
+                                        </div>
+                                        <p class="criterio-desc">{{ c.descripcion }}</p>
+                                    </div>
+                                    {% endfor %}
+                                    <p class="act-explicacion"><strong>Explicación:</strong> {{ entrega.explicacion }}</p>
+                                    <span class="meta-fina">Entregada el {{ entrega.fecha_entrega }}</span>
+                                </div>
+                                <details class="detalle-reentrega">
+                                    <summary>Volver a entregar</summary>
+                                    <form method="POST" action="/entregar_actividad_ia/{{ act.id }}" enctype="multipart/form-data" class="entrega-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <label>Tu respuesta</label>
+                                        <textarea name="contenido_texto" placeholder="Escribe tu desarrollo de la actividad..."></textarea>
+                                        <label>O adjunta un archivo</label>
+                                        <input type="file" name="archivo_entrega" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.zip">
+                                        <button type="submit" class="btn-accion primario">Volver a entregar y calificar</button>
+                                    </form>
+                                </details>
+                            {% elif entrega and entrega.estado == 'error' %}
+                                <div class="entrega-hecha">
+                                    <span class="tag tag-pendiente-cal">No se pudo calificar automáticamente</span>
+                                    <span class="meta-fina">Intenta entregar de nuevo.</span>
+                                </div>
+                                <form method="POST" action="/entregar_actividad_ia/{{ act.id }}" enctype="multipart/form-data" class="entrega-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <label>Tu respuesta</label>
+                                    <textarea name="contenido_texto" placeholder="Escribe tu desarrollo de la actividad...">{{ entrega.contenido_texto or '' }}</textarea>
+                                    <label>O adjunta un archivo</label>
+                                    <input type="file" name="archivo_entrega" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.zip">
+                                    <button type="submit" class="btn-accion primario">Reintentar</button>
+                                </form>
+                            {% else %}
+                                <form method="POST" action="/entregar_actividad_ia/{{ act.id }}" enctype="multipart/form-data" class="entrega-form">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <label>Entregar esta actividad</label>
+                                    <textarea name="contenido_texto" placeholder="Escribe tu desarrollo de la actividad..."></textarea>
+                                    <label>O adjunta un archivo</label>
+                                    <input type="file" name="archivo_entrega" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.zip">
+                                    <button type="submit" class="btn-accion primario">Entregar</button>
+                                </form>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 {% endfor %}

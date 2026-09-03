@@ -26,7 +26,16 @@
         .act-item:last-child{ border-bottom:none; }
         .act-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px; }
         .act-materia{ font-weight:600; font-size:13px; color:var(--tinta); }
+        .act-titulo{ font-weight:600; font-size:12px; color:var(--tinta); margin-bottom:3px; }
         .act-texto{ font-size:12px; color:var(--texto-sec); line-height:1.7; white-space:pre-line; margin-bottom:10px; }
+
+        .entrega-alumno-act{ background:var(--fondo); border-radius:var(--radio); padding:10px 12px; margin-top:6px; border-left:3px solid var(--azul); }
+        .criterio-item{ background:#fff; border:1px solid var(--linea); border-radius:6px; padding:7px 10px; margin-top:6px; }
+        .criterio-top{ display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:11px; }
+        .criterio-nombre{ font-weight:600; color:var(--tinta); }
+        .criterio-puntaje{ font-family:var(--fuente-mono); color:var(--azul); font-weight:600; flex-shrink:0; }
+        .criterio-desc{ font-size:11px; color:var(--texto-sec); margin-top:2px; }
+        .act-explicacion{ font-size:12px; color:var(--tinta); line-height:1.6; margin-top:8px; }
         .btn-editar-act{
             background:var(--superficie); color:var(--azul); border:1px solid var(--linea);
             padding:6px 13px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; transition:.15s;
@@ -95,9 +104,11 @@
                             </div>
                             {% if act.actividad_corregida %}
                                 <span class="tag tag-fix">Corregida por {{ act.profesor_corrector }}</span>
+                                <div class="act-titulo">{{ act.titulo }}</div>
                                 <div class="act-texto">{{ act.actividad_corregida }}</div>
                             {% else %}
                                 <span class="tag tag-ia">Generada por IA</span>
+                                <div class="act-titulo">{{ act.titulo }}</div>
                                 <div class="act-texto">{{ act.actividad }}</div>
                             {% endif %}
                             <button class="btn-editar-act"
@@ -106,6 +117,32 @@
                                 data-materia="{{ act.materia }}"
                                 data-texto="{{ act.actividad_corregida if act.actividad_corregida else act.actividad }}"
                                 onclick="abrirModal(this)">Corregir</button>
+
+                            {% if act.entrega and act.entrega.estado == 'calificada' %}
+                                <div class="entrega-alumno-act">
+                                    <span class="tag tag-calificada-p">Calificada por IA: {{ '%.0f'|format(act.entrega.calificacion) }}/100</span>
+                                    {% if act.entrega.contenido_texto %}
+                                        <p class="entrega-comentario">"{{ act.entrega.contenido_texto }}"</p>
+                                    {% endif %}
+                                    {% if act.entrega.archivo %}
+                                        <a href="/uploads_tareas/{{ act.entrega.archivo }}" download style="font-size:12px; color:var(--azul); font-weight:600;">Descargar entrega</a>
+                                    {% endif %}
+                                    {% for c in act.entrega.criterios %}
+                                    <div class="criterio-item">
+                                        <div class="criterio-top">
+                                            <span class="criterio-nombre">{{ c.nombre }}</span>
+                                            <span class="criterio-puntaje">{{ c.puntaje_obtenido }}/{{ c.puntaje_maximo }}</span>
+                                        </div>
+                                        <p class="criterio-desc">{{ c.descripcion }}</p>
+                                    </div>
+                                    {% endfor %}
+                                    <p class="act-explicacion"><strong>Explicación:</strong> {{ act.entrega.explicacion }}</p>
+                                </div>
+                            {% elif act.entrega and act.entrega.estado == 'error' %}
+                                <p class="sin-entregas">El alumno entregó, pero la IA no pudo calificarla automáticamente.</p>
+                            {% else %}
+                                <p class="sin-entregas">Sin entrega del alumno todavía.</p>
+                            {% endif %}
                         </div>
                         {% endfor %}
                     </div>

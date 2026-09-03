@@ -7,8 +7,10 @@ from Estilos_Apren import EvaluadorEstilosAprendizaje
 import sqlite3
 from datetime import timedelta
 import google.genai as genai
+from google.genai import types as genai_types
 import os
 import io
+import json
 import random
 import secrets
 import string
@@ -1246,6 +1248,15 @@ def init_db():
                      cuenta TEXT, materia TEXT, estilo TEXT,
                      actividad TEXT, actividad_corregida TEXT,
                      profesor_corrector TEXT, fecha_correccion TEXT)''')
+    _asegurar_columna(cur, "actividades_ia", "titulo", "TEXT")
+    cur.execute('''CREATE TABLE IF NOT EXISTS entregas_actividad_ia
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                     actividad_id INTEGER, cuenta TEXT,
+                     contenido_texto TEXT, archivo TEXT,
+                     fecha_entrega TEXT,
+                     calificacion REAL, criterios TEXT, explicacion TEXT,
+                     estado TEXT DEFAULT 'pendiente', fecha_calificacion TEXT,
+                     FOREIGN KEY(actividad_id) REFERENCES actividades_ia(id))''')
     cur.execute('''CREATE TABLE IF NOT EXISTS tareas_profesor
                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
                      cuenta TEXT, materia TEXT, titulo TEXT,
@@ -1529,6 +1540,115 @@ def test_materia(nombre_materia):
     if 'usuario' not in session: return redirect(url_for('login'))
     return render_template('index.html', lista_preguntas=mi_evaluador.preguntas, materia=nombre_materia)
 
+ACTIVIDADES_FALLBACK = [
+    {"titulo": "Mapas conceptuales", "descripcion": "Organiza los temas de la materia en esquemas visuales que conecten ideas principales y secundarias."},
+    {"titulo": "Fichas de repaso", "descripcion": "Resume cada tema en tarjetas breves que puedas revisar antes de un examen."},
+    {"titulo": "Práctica guiada", "descripcion": "Resuelve ejercicios del libro paso a paso, verificando cada resultado contra la solución oficial."},
+]
+
+_ESQUEMA_ACTIVIDADES_IA = {
+    "type": "object",
+    "properties": {
+        "actividades": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "titulo": {"type": "string"},
+                    "descripcion": {"type": "string"},
+                },
+                "required": ["titulo", "descripcion"],
+            },
+        },
+    },
+    "required": ["actividades"],
+}
+
+_ESQUEMA_CALIFICACION_IA = {
+    "type": "object",
+    "properties": {
+        "criterios": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "nombre": {"type": "string"},
+                    "descripcion": {"type": "string"},
+                    "puntaje_maximo": {"type": "number"},
+                    "puntaje_obtenido": {"type": "number"},
+                },
+                "required": ["nombre", "descripcion", "puntaje_maximo", "puntaje_obtenido"],
+            },
+        },
+        "calificacion_total": {"type": "number"},
+        "explicacion": {"type": "string"},
+    },
+    "required": ["criterios", "calificacion_total", "explicacion"],
+}
+
+_MIMETYPES_SOPORTADOS_IA = {
+    "pdf": "application/pdf", "png": "image/png",
+    "jpg": "image/jpeg", "jpeg": "image/jpeg", "txt": "text/plain",
+}
+
+def _generar_actividades_ia(estilo_ganador, materia_evaluada):
+    prompt = (
+        f"Actúa como un asesor académico universitario de la FES Cuautitlán, UNAM. Redacta en tono formal, "
+        f"profesional y directo, sin exclamaciones, sin apodos hacia el alumno (nada de 'joven' u otras "
+        f"muletillas) y sin ningún texto introductorio ni de cierre. Para un alumno con estilo de aprendizaje "
+        f"{estilo_ganador} en la materia '{materia_evaluada}', genera exactamente 3 actividades de estudio "
+        f"prácticas y concretas, cada una con un título corto y una descripción breve. No uses asteriscos ni "
+        f"saludos ni despedidas."
+    )
+    try:
+        respuesta = cliente_ia.models.generate_content(
+            model='gemini-2.5-flash', contents=prompt,
+            config=genai_types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=_ESQUEMA_ACTIVIDADES_IA,
+            ))
+        actividades = json.loads(respuesta.text)["actividades"]
+        if not actividades:
+            return ACTIVIDADES_FALLBACK
+        return actividades[:3]
+    except Exception:
+        return ACTIVIDADES_FALLBACK
+
+def _calificar_actividad_con_ia(materia, estilo, titulo, descripcion, contenido_texto, archivo_path, archivo_ext):
+    partes_entrega = []
+    if contenido_texto:
+        partes_entrega.append(f"Texto entregado por el alumno:\n{contenido_texto}")
+    mimetype = _MIMETYPES_SOPORTADOS_IA.get(archivo_ext)
+    if archivo_path and mimetype:
+        with open(archivo_path, 'rb') as f:
+            partes_entrega.append(genai_types.Part.from_bytes(data=f.read(), mime_type=mimetype))
+    elif archivo_path:
+        partes_entrega.append(f"El alumno adjuntó un archivo ({os.path.basename(archivo_path)}) que no se pudo "
+                               f"leer automáticamente; califica solo con base en el texto disponible, si lo hay.")
+
+    prompt = (
+        f"Actúa como un evaluador académico universitario de la FES Cuautitlán, UNAM, revisando la entrega de un "
+        f"alumno con estilo de aprendizaje {estilo} para la materia '{materia}'.\n"
+        f"Actividad asignada — {titulo}: {descripcion}\n\n"
+        f"Define entre 3 y 5 criterios de evaluación pertinentes para esta actividad en concreto (nombre corto, "
+        f"descripción breve de qué evalúa cada uno, y un puntaje máximo por criterio; la suma de los puntajes "
+        f"máximos debe ser 100). Califica la entrega del alumno contra cada criterio con un puntaje obtenido "
+        f"(nunca mayor al máximo de ese criterio), calcula la calificación total como la suma de los puntajes "
+        f"obtenidos, y escribe una explicación clara y concreta — entendible tanto por el alumno como por su "
+        f"profesor — de en qué te basaste para calificar así, qué se hizo bien y qué falta. Tono profesional y "
+        f"directo, sin saludos ni despedidas, sin asteriscos."
+    )
+    try:
+        respuesta = cliente_ia.models.generate_content(
+            model='gemini-2.5-flash', contents=[prompt, *partes_entrega],
+            config=genai_types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=_ESQUEMA_CALIFICACION_IA,
+            ))
+        return json.loads(respuesta.text)
+    except Exception:
+        return None
+
 @app.route('/evaluar', methods=['POST'])
 def evaluar():
     if 'usuario' not in session: return redirect(url_for('login'))
@@ -1546,22 +1666,21 @@ def evaluar():
         except Exception:
             consejo_generado = "1. Consejo: Haz mapas mentales.\n2. Libro: Consulta la bibliografía oficial.\n3. Recurso: Busca tutoriales en YouTube."
         
-        # Generar actividades IA
-        prompt_actividades = f"Actúa como un asesor académico universitario de la FES Cuautitlán, UNAM. Redacta en tono formal, profesional y directo, sin exclamaciones, sin apodos hacia el alumno (nada de 'joven' u otras muletillas) y sin ningún texto introductorio ni de cierre. Para un alumno con estilo de aprendizaje {estilo_ganador} en la materia '{materia_evaluada}', genera exactamente 3 actividades de estudio prácticas y concretas. Escríbelas numeradas (1. 2. 3.) separadas por salto de línea. Cada actividad debe tener un título corto seguido de dos puntos y una descripción breve. No uses asteriscos ni saludos ni despedidas."
-        try:
-            resp_act = cliente_ia.models.generate_content(model='gemini-2.5-flash', contents=prompt_actividades)
-            actividades_generadas = resp_act.text
-        except Exception:
-            actividades_generadas = "1. Mapas conceptuales: Organiza los temas en esquemas visuales.\n2. Fichas de repaso: Resume cada tema en tarjetas de estudio.\n3. Práctica guiada: Resuelve ejercicios del libro paso a paso."
+        # Generar actividades IA (cada una queda como su propia fila, con su propio título)
+        actividades_generadas = _generar_actividades_ia(estilo_ganador, materia_evaluada)
 
         conexion = sqlite3.connect('base_dts.db')
         cursor = conexion.cursor()
         cursor.execute("REPLACE INTO evaluaciones (cuenta, materia, estilo, recomendacion) VALUES (?, ?, ?, ?)",
                        (cuenta_actual, materia_evaluada, estilo_ganador, consejo_generado))
-        # Guardar actividades IA (reemplazar si ya existe)
+        # Guardar actividades IA (reemplazar si ya existían, junto con entregas/calificaciones previas)
+        cursor.execute("""DELETE FROM entregas_actividad_ia WHERE actividad_id IN
+                           (SELECT id FROM actividades_ia WHERE cuenta=? AND materia=?)""",
+                       (cuenta_actual, materia_evaluada))
         cursor.execute("DELETE FROM actividades_ia WHERE cuenta=? AND materia=?", (cuenta_actual, materia_evaluada))
-        cursor.execute("INSERT INTO actividades_ia (cuenta, materia, estilo, actividad) VALUES (?,?,?,?)",
-                       (cuenta_actual, materia_evaluada, estilo_ganador, actividades_generadas))
+        for act in actividades_generadas:
+            cursor.execute("INSERT INTO actividades_ia (cuenta, materia, estilo, titulo, actividad) VALUES (?,?,?,?,?)",
+                           (cuenta_actual, materia_evaluada, estilo_ganador, act["titulo"], act["descripcion"]))
         conexion.commit()
         conexion.close()
         return render_template('resultado.html', datos=resultados, materia=materia_evaluada)
@@ -1612,7 +1731,7 @@ def mis_actividades():
 
     con = get_db()
     actividades = con.execute(
-        "SELECT materia, estilo, actividad, actividad_corregida FROM actividades_ia WHERE cuenta=? ORDER BY materia",
+        "SELECT id, materia, estilo, titulo, actividad, actividad_corregida FROM actividades_ia WHERE cuenta=? ORDER BY materia, id",
         (cuenta_actual,)).fetchall()
     tareas = con.execute(
         "SELECT id, materia, titulo, descripcion, fecha_entrega, archivo, profesor, fecha_asignacion FROM tareas_profesor WHERE cuenta=? ORDER BY fecha_entrega",
@@ -1620,13 +1739,18 @@ def mis_actividades():
     # Obtener entregas del alumno
     entregas = {row['tarea_id']: dict(row) for row in con.execute(
         "SELECT * FROM entregas_tarea WHERE cuenta=?", (cuenta_actual,)).fetchall()}
+    entregas_actividades = {row['actividad_id']: dict(row) for row in con.execute(
+        "SELECT * FROM entregas_actividad_ia WHERE cuenta=?", (cuenta_actual,)).fetchall()}
+    for entrega in entregas_actividades.values():
+        entrega['criterios'] = json.loads(entrega['criterios']) if entrega['criterios'] else []
     con.close()
 
     return render_template('mis_actividades.html',
                            alumno=datos_alumno,
                            actividades=[dict(a) for a in actividades],
                            tareas=[dict(t) for t in tareas],
-                           entregas=entregas)
+                           entregas=entregas,
+                           entregas_actividades=entregas_actividades)
 
 @app.route('/uploads_tareas/<filename>')
 def descargar_archivo(filename):
@@ -1649,9 +1773,19 @@ def profesor_tareas():
         alumno = get_alumno(cuenta)
         nombre = alumno['nombre'] if alumno else cuenta
         acts = con.execute(
-            "SELECT id, materia, estilo, actividad, actividad_corregida, profesor_corrector FROM actividades_ia WHERE cuenta=?",
+            "SELECT id, materia, estilo, titulo, actividad, actividad_corregida, profesor_corrector FROM actividades_ia WHERE cuenta=? ORDER BY materia, id",
             (cuenta,)).fetchall()
-        actividades[cuenta] = {'nombre': nombre, 'cuenta': cuenta, 'actividades': [dict(a) for a in acts]}
+        entregas_acts = {row['actividad_id']: dict(row) for row in con.execute(
+            "SELECT * FROM entregas_actividad_ia WHERE cuenta=?", (cuenta,)).fetchall()}
+        acts_con_entrega = []
+        for a in acts:
+            act_dict = dict(a)
+            entrega = entregas_acts.get(act_dict['id'])
+            if entrega:
+                entrega['criterios'] = json.loads(entrega['criterios']) if entrega['criterios'] else []
+            act_dict['entrega'] = entrega
+            acts_con_entrega.append(act_dict)
+        actividades[cuenta] = {'nombre': nombre, 'cuenta': cuenta, 'actividades': acts_con_entrega}
 
     # Tareas ya asignadas por este profesor
     tareas = con.execute(
@@ -2035,6 +2169,7 @@ def admin_eliminar_alumno():
         con.execute("DELETE FROM alumnos WHERE cuenta=?", (cuenta,))
         con.execute("DELETE FROM inscripciones WHERE cuenta=?", (cuenta,))
         con.execute("DELETE FROM evaluaciones WHERE cuenta=?", (cuenta,))
+        con.execute("DELETE FROM entregas_actividad_ia WHERE cuenta=?", (cuenta,))
         con.execute("DELETE FROM actividades_ia WHERE cuenta=?", (cuenta,))
         con.execute("DELETE FROM tareas_profesor WHERE cuenta=?", (cuenta,))
         con.commit()
@@ -2106,6 +2241,58 @@ def entregar_tarea(tarea_id):
     con.execute("DELETE FROM entregas_tarea WHERE tarea_id=? AND cuenta=?", (tarea_id, cuenta))
     con.execute("""INSERT INTO entregas_tarea (tarea_id, cuenta, archivo, comentario, fecha_entrega)
                    VALUES (?,?,?,?,?)""", (tarea_id, cuenta, archivo_nombre, comentario, fecha))
+    con.commit()
+    con.close()
+    return redirect(url_for('mis_actividades'))
+
+@app.route('/entregar_actividad_ia/<int:actividad_id>', methods=['POST'])
+def entregar_actividad_ia(actividad_id):
+    if 'usuario' not in session:
+        return redirect(url_for('login'))
+    from datetime import datetime
+    cuenta = session['usuario']
+
+    con = get_db()
+    actividad = con.execute(
+        "SELECT * FROM actividades_ia WHERE id=? AND cuenta=?", (actividad_id, cuenta)).fetchone()
+    if not actividad:
+        con.close()
+        return redirect(url_for('mis_actividades'))
+
+    contenido_texto = request.form.get('contenido_texto', '').strip()
+    archivo_nombre, archivo_ext = None, None
+    if 'archivo_entrega' in request.files:
+        archivo = request.files['archivo_entrega']
+        if archivo and archivo.filename and allowed_file(archivo.filename):
+            archivo_ext = archivo.filename.rsplit('.', 1)[1].lower()
+            archivo_nombre = secure_filename(f"entrega_act_{cuenta}_{actividad_id}_{archivo.filename}")
+            archivo.save(os.path.join(app.config['UPLOAD_FOLDER'], archivo_nombre))
+
+    if not contenido_texto and not archivo_nombre:
+        con.close()
+        return redirect(url_for('mis_actividades'))
+
+    fecha = datetime.now().strftime('%d/%m/%Y %H:%M')
+    con.execute("DELETE FROM entregas_actividad_ia WHERE actividad_id=? AND cuenta=?", (actividad_id, cuenta))
+    con.execute("""INSERT INTO entregas_actividad_ia (actividad_id, cuenta, contenido_texto, archivo, fecha_entrega, estado)
+                   VALUES (?,?,?,?,?,'pendiente')""", (actividad_id, cuenta, contenido_texto, archivo_nombre, fecha))
+    con.commit()
+
+    archivo_path = os.path.join(app.config['UPLOAD_FOLDER'], archivo_nombre) if archivo_nombre else None
+    descripcion_actividad = actividad['actividad_corregida'] or actividad['actividad']
+    resultado = _calificar_actividad_con_ia(
+        actividad['materia'], actividad['estilo'], actividad['titulo'], descripcion_actividad,
+        contenido_texto, archivo_path, archivo_ext)
+
+    if resultado:
+        con.execute("""UPDATE entregas_actividad_ia
+                       SET calificacion=?, criterios=?, explicacion=?, estado='calificada', fecha_calificacion=?
+                       WHERE actividad_id=? AND cuenta=?""",
+                    (resultado['calificacion_total'], json.dumps(resultado['criterios']), resultado['explicacion'],
+                     fecha, actividad_id, cuenta))
+    else:
+        con.execute("UPDATE entregas_actividad_ia SET estado='error' WHERE actividad_id=? AND cuenta=?",
+                    (actividad_id, cuenta))
     con.commit()
     con.close()
     return redirect(url_for('mis_actividades'))
