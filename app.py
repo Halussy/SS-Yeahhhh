@@ -1462,12 +1462,27 @@ def guardar_materias():
     if total_creditos <= 64:
         conexion = sqlite3.connect('base_dts.db')
         cursor = conexion.cursor()
+        materias_previas = {f[0] for f in cursor.execute(
+            "SELECT materia FROM inscripciones WHERE cuenta=?", (cuenta_actual,)).fetchall()}
+        materias_dadas_de_baja = materias_previas - set(materias_seleccionadas)
+
         cursor.execute("DELETE FROM inscripciones WHERE cuenta=?", (cuenta_actual,))
         for mat in materias_seleccionadas:
             cursor.execute("INSERT INTO inscripciones (cuenta, materia) VALUES (?, ?)", (cuenta_actual, mat))
+
+        # Al dar de baja una materia, se borran también el consejo y las actividades
+        # que la IA generó para ella (y sus entregas/calificaciones), no solo la inscripción.
+        for mat in materias_dadas_de_baja:
+            cursor.execute("""DELETE FROM entregas_actividad_ia WHERE actividad_id IN
+                               (SELECT id FROM actividades_ia WHERE cuenta=? AND materia=?)""",
+                           (cuenta_actual, mat))
+            cursor.execute("DELETE FROM actividades_ia WHERE cuenta=? AND materia=?", (cuenta_actual, mat))
+            cursor.execute("DELETE FROM evaluaciones WHERE cuenta=? AND materia=?", (cuenta_actual, mat))
+            cursor.execute("DELETE FROM correcciones_profesor WHERE cuenta=? AND materia=?", (cuenta_actual, mat))
+
         conexion.commit()
         conexion.close()
-        
+
     return redirect(url_for('mis_materias'))
 
 @app.route('/mis_materias')

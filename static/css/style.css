@@ -233,13 +233,13 @@ tr:last-child td{ border-bottom:none; }
 
 /* -------------------------------------------------------------------------
    Insignias de estilo de aprendizaje — con glifo de señal
-   (visual = seno · auditivo = triángulo · kinestesico = pulso · analitico = escalón)
+   (visual = ojo · auditivo = bocina · kinestesico = cruz de flechas · analitico = checklist)
    ------------------------------------------------------------------------- */
 .badge-estilo{
   display:inline-flex; align-items:center; gap:5px; padding:3px 10px 3px 6px;
   border-radius:20px; font-size:11px; font-weight:600; text-transform:capitalize;
 }
-.badge-estilo svg{ width:20px; height:10px; flex-shrink:0; }
+.badge-estilo svg{ width:13px; height:13px; flex-shrink:0; }
 .badge-visual{ background:#E6EDF5; color:#1B4067; }
 .badge-auditivo{ background:#F7EFDD; color:#8A6A22; }
 .badge-kinestesico{ background:#E4F2EE; color:#1F7561; }
