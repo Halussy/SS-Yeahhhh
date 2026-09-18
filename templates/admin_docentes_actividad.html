@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Actividad docente - Panel administrativo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .section-title{
+            font-size:15px; font-weight:600; color:var(--azul); margin-bottom:14px; padding-bottom:9px;
+            border-bottom:1px solid var(--linea); display:flex; align-items:center; gap:8px;
+        }
+        .section-title svg{ width:16px; height:16px; color:var(--senal-txt); }
+
+        .docentes-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:32px; }
+        .docente-card{ overflow:hidden; }
+        .docente-header{ background:var(--azul); padding:10px 14px; display:flex; align-items:center; gap:10px; }
+        .avatar{
+            width:30px; height:30px; background:var(--dorado); border-radius:50%; display:flex;
+            align-items:center; justify-content:center; font-weight:600; color:var(--azul); font-size:13px; flex-shrink:0;
+        }
+        .docente-nombre{ color:#fff; font-size:13px; font-weight:600; }
+        .docente-meta{ color:rgba(255,255,255,0.65); font-size:11px; font-family:var(--fuente-mono); }
+        .docente-body{ padding:12px 14px; }
+        .contadores{ display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; }
+        .contador{ background:var(--fondo); border-radius:6px; padding:8px 10px; }
+        .contador-num{ font-size:18px; font-weight:700; color:var(--tinta); font-family:var(--fuente-display); line-height:1; }
+        .contador-label{ font-size:11px; color:var(--texto-sec); margin-top:3px; }
+        .docente-ultima{ font-size:11px; color:var(--texto-mute); margin-top:10px; font-family:var(--fuente-mono); }
+
+        .filtros-lista{ display:flex; gap:8px; margin-bottom:12px; }
+        .filtros-lista input[type="text"]{
+            flex:1 1 0%; min-width:0; padding:7px 10px; border:1px solid var(--linea); border-radius:6px;
+            font-size:12px; color:var(--tinta); font-family:var(--fuente-cuerpo);
+        }
+        .filtros-lista select{
+            width:200px; flex-shrink:0; padding:7px 10px; border:1px solid var(--linea); border-radius:6px;
+            font-size:12px; color:var(--tinta); font-family:var(--fuente-cuerpo); cursor:pointer;
+        }
+        .filtros-lista input[type="text"]:focus, .filtros-lista select:focus{ outline:none; border-color:var(--azul); }
+        .sin-resultados{ font-size:12px; color:var(--texto-mute); padding:8px 0; display:none; }
+        .sin-resultados.visible{ display:block; }
+
+        .registro{ padding:12px 16px; border-left:3px solid var(--linea); margin-bottom:10px; }
+        .registro.oculto{ display:none; }
+        .registro-top{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+        .registro-fecha{ font-size:11px; color:var(--texto-mute); font-family:var(--fuente-mono); }
+        .registro-profesor{ font-size:13px; font-weight:600; color:var(--tinta); }
+        .registro-contexto{ font-size:12px; color:var(--texto-sec); margin-bottom:6px; }
+        .registro-detalle{ font-size:12px; color:var(--tinta); line-height:1.65; white-space:pre-line; background:var(--fondo); border-radius:6px; padding:9px 11px; }
+        .registro.accion-consejo{ border-left-color:var(--azul); }
+        .registro.accion-actividad{ border-left-color:var(--senal); }
+        .registro.accion-tarea{ border-left-color:var(--dorado); }
+        .registro.accion-calificacion{ border-left-color:#5B3E85; }
+    </style>
+</head>
+<body>
+
+<div class="top-navbar">
+    <h2>Panel administrativo - Facultad de Estudios Superiores Cuautitlán Campo 4</h2>
+    <div class="navbar-right">
+        <span>{{ admin }}</span>
+        <a href="/admin/logout" class="logout-btn">Cerrar sesión</a>
+    </div>
+</div>
+<div class="tabs-container">
+    <a href="/admin/dashboard" class="tab-link">Resumen y evaluaciones</a>
+    <a href="/admin/alumnos" class="tab-link">Alumnos</a>
+    <a href="/admin/profesores" class="tab-link">Docentes</a>
+    <a href="/admin/docentes_actividad" class="tab-link active">Actividad docente</a>
+    <a href="/admin/administradores" class="tab-link">Administradores</a>
+</div>
+
+<div class="container ancho">
+
+    <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Resumen por docente
+    </div>
+
+    {% if resumen %}
+    <div class="docentes-grid">
+        {% for docente in resumen %}
+        <div class="card docente-card">
+            <div class="docente-header">
+                <div class="avatar">{{ docente.nombre[0] }}</div>
+                <div>
+                    <div class="docente-nombre">{{ docente.nombre }}</div>
+                    <div class="docente-meta">{{ docente.usuario }} · {{ docente.carreras }}</div>
+                </div>
+            </div>
+            <div class="docente-body">
+                <div class="contadores">
+                    <div class="contador">
+                        <div class="contador-num">{{ docente.consejo }}</div>
+                        <div class="contador-label">Consejos corregidos</div>
+                    </div>
+                    <div class="contador">
+                        <div class="contador-num">{{ docente.actividad }}</div>
+                        <div class="contador-label">Actividades revisadas</div>
+                    </div>
+                    <div class="contador">
+                        <div class="contador-num">{{ docente.tarea }}</div>
+                        <div class="contador-label">Tareas asignadas</div>
+                    </div>
+                    <div class="contador">
+                        <div class="contador-num">{{ docente.calificacion }}</div>
+                        <div class="contador-label">Entregas calificadas</div>
+                    </div>
+                </div>
+                <div class="docente-ultima">
+                    {% if docente.ultima %}Última actividad: {{ docente.ultima }}{% else %}Sin actividad registrada{% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <p>Aún no hay docentes registrados.</p>
+        </div>
+    {% endif %}
+
+    <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Bitácora de actividad
+    </div>
+
+    {% if bitacora %}
+    <div class="filtros-lista">
+        <input type="text" id="filtro-texto" placeholder="Buscar por docente, alumno, materia o detalle..." oninput="filtrarBitacora()">
+        <select id="filtro-docente" onchange="filtrarBitacora()">
+            <option value="">Todos los docentes</option>
+            {% for docente in resumen %}
+            <option value="{{ docente.nombre }}">{{ docente.nombre }}</option>
+            {% endfor %}
+        </select>
+        <select id="filtro-accion" onchange="filtrarBitacora()">
+            <option value="">Todas las acciones</option>
+            {% for clave, texto in acciones.items() %}
+            <option value="{{ clave }}">{{ texto }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="sin-resultados" id="bitacora-sin-resultados">Ningún registro coincide con los filtros.</div>
+
+    <div id="lista-bitacora">
+        {% for registro in bitacora %}
+        <div class="card registro accion-{{ registro.accion }}"
+             data-docente="{{ registro.profesor }}"
+             data-accion="{{ registro.accion }}"
+             data-texto="{{ (registro.profesor ~ ' ' ~ registro.nombre_alumno ~ ' ' ~ (registro.materia or '') ~ ' ' ~ (registro.detalle or ''))|lower }}">
+            <div class="registro-top">
+                <span class="tag tag-{{ 'fix' if registro.accion in ['consejo', 'actividad'] else 'ia' }}">{{ registro.accion_texto }}</span>
+                <span class="registro-profesor">{{ registro.profesor }}</span>
+                <span class="registro-fecha">{{ registro.fecha_legible }}</span>
+            </div>
+            <div class="registro-contexto">{{ registro.nombre_alumno }}{% if registro.materia %} · {{ registro.materia }}{% endif %}</div>
+            {% if registro.detalle %}
+            <div class="registro-detalle">{{ registro.detalle }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <p>Todavía no hay actividad registrada de los docentes.</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function normalizar(texto) {
+        return (texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    }
+
+    function filtrarBitacora() {
+        const texto = normalizar(document.getElementById('filtro-texto').value.trim());
+        const docente = document.getElementById('filtro-docente').value;
+        const accion = document.getElementById('filtro-accion').value;
+        const items = document.querySelectorAll('#lista-bitacora .registro');
+        let visibles = 0;
+        items.forEach(item => {
+            const mostrar = (!texto || normalizar(item.dataset.texto).includes(texto)) &&
+                            (!docente || item.dataset.docente === docente) &&
+                            (!accion || item.dataset.accion === accion);
+            item.classList.toggle('oculto', !mostrar);
+            if (mostrar) visibles++;
+        });
+        document.getElementById('bitacora-sin-resultados').classList.toggle('visible', visibles === 0);
+    }
+</script>
+
+</body>
+</html>

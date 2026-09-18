@@ -1196,6 +1196,72 @@ def _migrar_carrera_profesor_a_tabla_relacion(cur):
     for usuario, carrera in filas:
         cur.execute("INSERT OR IGNORE INTO profesor_carreras (usuario, carrera) VALUES (?,?)", (usuario, carrera))
 
+# La bitácora guarda la fecha en ISO (y no en el dd/mm/aaaa del resto del proyecto)
+# porque es el único formato que se ordena bien como texto: 'ORDER BY fecha DESC'.
+def _fecha_iso_ahora():
+    from datetime import datetime
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+def _fecha_ddmmaaaa_a_iso(fecha):
+    """Convierte las fechas ya guardadas en 'dd/mm/aaaa HH:MM' a ISO.
+    Devuelve '' si no se puede parsear, para que esas filas queden al final del orden."""
+    from datetime import datetime
+    for formato in ("%d/%m/%Y %H:%M", "%d/%m/%Y"):
+        try:
+            return datetime.strptime(fecha, formato).strftime("%Y-%m-%d %H:%M:%S")
+        except (ValueError, TypeError):
+            continue
+    return ""
+
+def _fecha_iso_a_legible(fecha):
+    """Pasa la fecha ISO de la bitácora al dd/mm/aaaa HH:MM que usa el resto de la interfaz."""
+    from datetime import datetime
+    try:
+        return datetime.strptime(fecha, "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M")
+    except (ValueError, TypeError):
+        return "Fecha desconocida"
+
+def _registrar_bitacora(cur, usuario, nombre, accion, cuenta, materia, detalle, fecha=None):
+    cur.execute("""INSERT INTO bitacora_profesor
+                   (profesor_usuario, profesor, accion, cuenta, materia, detalle, fecha)
+                   VALUES (?,?,?,?,?,?,?)""",
+                (usuario, nombre, accion, cuenta, materia, detalle, fecha or _fecha_iso_ahora()))
+
+def _sembrar_bitacora_historica(cur):
+    """Siembra la bitácora, una sola vez, con lo que los profesores ya habían hecho
+    antes de que existiera esta tabla; si no, la pestaña del admin nacería vacía."""
+    nombre_a_usuario = {nombre: usuario for usuario, nombre in
+                        cur.execute("SELECT usuario, nombre FROM profesores").fetchall()}
+
+    def registrar(nombre, accion, cuenta, materia, detalle, fecha):
+        _registrar_bitacora(cur, nombre_a_usuario.get(nombre), nombre, accion,
+                            cuenta, materia, detalle, _fecha_ddmmaaaa_a_iso(fecha))
+
+    for cuenta, materia, detalle, profesor, fecha in cur.execute(
+            "SELECT cuenta, materia, recomendacion_corregida, profesor, fecha FROM correcciones_profesor").fetchall():
+        registrar(profesor, "consejo", cuenta, materia, detalle, fecha)
+
+    for cuenta, materia, detalle, profesor, fecha in cur.execute(
+            """SELECT cuenta, materia, actividad_corregida, profesor_corrector, fecha_correccion
+               FROM actividades_ia WHERE actividad_corregida IS NOT NULL""").fetchall():
+        registrar(profesor, "actividad", cuenta, materia, detalle, fecha)
+
+    for cuenta, materia, titulo, profesor, fecha in cur.execute(
+            "SELECT cuenta, materia, titulo, profesor, fecha_asignacion FROM tareas_profesor").fetchall():
+        registrar(profesor, "tarea", cuenta, materia, titulo, fecha)
+
+    for cuenta, materia, calificacion, retro, profesor, fecha in cur.execute(
+            """SELECT e.cuenta, t.materia, e.calificacion, e.retroalimentacion, t.profesor, e.fecha_calificacion
+               FROM entregas_tarea e JOIN tareas_profesor t ON e.tarea_id = t.id
+               WHERE e.calificacion IS NOT NULL""").fetchall():
+        registrar(profesor, "calificacion", cuenta, materia,
+                  _detalle_calificacion(calificacion, retro), fecha)
+
+def _detalle_calificacion(calificacion, retroalimentacion):
+    if retroalimentacion:
+        return f"Calificación: {calificacion} — {retroalimentacion}"
+    return f"Calificación: {calificacion}"
+
 def init_db():
     con = get_db()
     cur = con.cursor()
@@ -1270,6 +1336,16 @@ def init_db():
                      calificacion TEXT, retroalimentacion TEXT,
                      fecha_calificacion TEXT,
                      FOREIGN KEY(tarea_id) REFERENCES tareas_profesor(id))''')
+
+    bitacora_es_nueva = not cur.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='bitacora_profesor'").fetchone()
+    cur.execute('''CREATE TABLE IF NOT EXISTS bitacora_profesor
+                    (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                     profesor_usuario TEXT, profesor TEXT, accion TEXT,
+                     cuenta TEXT, materia TEXT, detalle TEXT, fecha TEXT)''')
+    if bitacora_es_nueva:
+        _sembrar_bitacora_historica(cur)
+
     con.commit()
     con.close()
 
@@ -1840,6 +1916,10 @@ def profesor_corregir_actividad():
     con = get_db()
     con.execute("UPDATE actividades_ia SET actividad_corregida=?, profesor_corrector=?, fecha_correccion=? WHERE id=?",
                 (corregida, nombre_prof, fecha, act_id))
+    actividad = con.execute("SELECT cuenta, materia FROM actividades_ia WHERE id=?", (act_id,)).fetchone()
+    if actividad:
+        _registrar_bitacora(con, session['profesor'], nombre_prof, "actividad",
+                            actividad['cuenta'], actividad['materia'], corregida)
     con.commit()
     con.close()
     return redirect(url_for('profesor_tareas'))
@@ -1867,6 +1947,7 @@ def profesor_asignar_tarea():
     con = get_db()
     con.execute("INSERT INTO tareas_profesor (cuenta, materia, titulo, descripcion, fecha_entrega, archivo, profesor, fecha_asignacion) VALUES (?,?,?,?,?,?,?,?)",
                 (cuenta, materia, titulo, descripcion, fecha_entrega, archivo_nombre, nombre_prof, fecha_hoy))
+    _registrar_bitacora(con, session['profesor'], nombre_prof, "tarea", cuenta, materia, titulo)
     con.commit()
     con.close()
     return redirect(url_for('profesor_tareas'))
@@ -2003,6 +2084,8 @@ def profesor_corregir():
                       (cuenta, materia, recomendacion_corregida, profesor, fecha)
                       VALUES (?, ?, ?, ?, ?)""",
                    (cuenta, materia, nueva_recomendacion, nombre_profesor, fecha_hoy))
+    _registrar_bitacora(cursor, usuario_profesor, nombre_profesor, "consejo",
+                        cuenta, materia, nueva_recomendacion)
     conexion.commit()
     conexion.close()
 
@@ -2125,6 +2208,64 @@ def admin_profesores():
                            carreras=CARRERAS,
                            carreras_por_profesor=carreras_por_profesor,
                            nombres_carreras_por_profesor=nombres_carreras_por_profesor)
+
+ACCIONES_BITACORA = {
+    "consejo": "Corrigió consejo IA",
+    "actividad": "Revisó actividad IA",
+    "tarea": "Asignó tarea",
+    "calificacion": "Calificó entrega",
+}
+
+@app.route("/admin/docentes_actividad")
+def admin_docentes_actividad():
+    if "admin" not in session:
+        return redirect(url_for("admin_login"))
+    nombre_admin = get_admin(session["admin"])["nombre"]
+
+    con = get_db()
+    filas = con.execute("SELECT * FROM bitacora_profesor ORDER BY fecha DESC, id DESC").fetchall()
+    con.close()
+
+    todos_profesores = get_todos_profesores()
+    resumen = {}
+    for usuario, datos in todos_profesores.items():
+        resumen[datos["nombre"]] = {
+            "nombre": datos["nombre"], "usuario": usuario,
+            "carreras": ", ".join(CARRERAS[c] for c in obtener_carreras_profesor(usuario)) or "—",
+            "consejo": 0, "actividad": 0, "tarea": 0, "calificacion": 0,
+            "total": 0, "ultima": None,
+        }
+
+    bitacora = []
+    for fila in filas:
+        registro = dict(fila)
+        alumno = get_alumno(registro["cuenta"]) if registro["cuenta"] else None
+        registro["nombre_alumno"] = alumno["nombre"] if alumno else (registro["cuenta"] or "—")
+        registro["accion_texto"] = ACCIONES_BITACORA.get(registro["accion"], registro["accion"])
+        registro["fecha_legible"] = _fecha_iso_a_legible(registro["fecha"])
+        bitacora.append(registro)
+
+        # Un profesor ya dado de baja puede seguir apareciendo en la bitácora: se le arma
+        # una entrada al vuelo para que su historial no se pierda de la vista del admin.
+        ficha = resumen.setdefault(registro["profesor"], {
+            "nombre": registro["profesor"], "usuario": registro["profesor_usuario"] or "—",
+            "carreras": "Docente dado de baja",
+            "consejo": 0, "actividad": 0, "tarea": 0, "calificacion": 0,
+            "total": 0, "ultima": None,
+        })
+        if registro["accion"] in ACCIONES_BITACORA:
+            ficha[registro["accion"]] += 1
+        ficha["total"] += 1
+        if ficha["ultima"] is None:
+            ficha["ultima"] = registro["fecha_legible"]
+
+    resumen_ordenado = sorted(resumen.values(), key=lambda f: (-f["total"], f["nombre"]))
+    return render_template("admin_docentes_actividad.html",
+                           admin=nombre_admin,
+                           admin_activo=session["admin"],
+                           resumen=resumen_ordenado,
+                           bitacora=bitacora,
+                           acciones=ACCIONES_BITACORA)
 
 @app.route("/admin/administradores")
 def admin_administradores():
@@ -2326,6 +2467,13 @@ def profesor_calificar_entrega():
     con.execute("""UPDATE entregas_tarea
                    SET calificacion=?, retroalimentacion=?, fecha_calificacion=?
                    WHERE id=?""", (calificacion, retroalimentacion, fecha, entrega_id))
+    entrega = con.execute("""SELECT e.cuenta, t.materia FROM entregas_tarea e
+                             JOIN tareas_profesor t ON e.tarea_id = t.id
+                             WHERE e.id=?""", (entrega_id,)).fetchone()
+    if entrega:
+        _registrar_bitacora(con, session['profesor'], get_profesor(session['profesor'])['nombre'],
+                            "calificacion", entrega['cuenta'], entrega['materia'],
+                            _detalle_calificacion(calificacion, retroalimentacion))
     con.commit()
     con.close()
     return redirect(url_for('profesor_tareas'))
